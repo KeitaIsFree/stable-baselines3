@@ -92,7 +92,7 @@ class OURS(OffPolicyAlgorithm):
         env: Union[GymEnv, str],
         learning_rate: Union[float, Schedule] = 3e-4,
         buffer_size: int = 1_000_000,  # 1e6
-        learning_starts: int = 100,
+        learning_starts: int = 1, # default 100
         batch_size: int = 256,
         tau: float = 0.005,
         gamma: float = 0.99,
@@ -115,6 +115,7 @@ class OURS(OffPolicyAlgorithm):
         device: Union[th.device, str] = "auto",
         _init_setup_model: bool = True,
     ):
+        print("LEARNING STARTING AT ZERO ")
         super().__init__(
             policy,
             env,
@@ -140,8 +141,9 @@ class OURS(OffPolicyAlgorithm):
             use_sde_at_warmup=use_sde_at_warmup,
             optimize_memory_usage=optimize_memory_usage,
             supported_action_spaces=(spaces.Box,),
-            support_multi_env=True,
+            support_multi_env=True
         )
+
 
         self.log_ent_coef = None  # type: Optional[th.Tensor]
         # Entropy coefficient / Entropy temperature
@@ -199,9 +201,10 @@ class OURS(OffPolicyAlgorithm):
 
             with th.no_grad():
                 # Select action according to policy
-                next_actions = self.actor_e(replay_data.next_observations, deterministic=True)
+                obs_cpy = replay_data.next_observations.clone().detach()
+                next_actions = self.actor_e.predict(obs_cpy.cpu(), deterministic=True)[0]
                 # Compute the next Q values: min over all critics targets
-                next_q_values = th.cat(self.critic_target(replay_data.next_observations, next_actions), dim=1)
+                next_q_values = th.cat(self.critic_target(replay_data.next_observations, th.tensor(next_actions, device=self.device)), dim=1)
                 next_q_values, _ = th.min(next_q_values, dim=1, keepdim=True)
                 # td error + entropy term
                 target_q_values = replay_data.rewards + (1 - replay_data.dones) * self.gamma * next_q_values
@@ -220,6 +223,7 @@ class OURS(OffPolicyAlgorithm):
             critic_loss.backward()
             self.critic.optimizer.step()
 
+
             # Compute actor loss
             # Alternative: actor_loss = th.mean(log_prob - qf1_pi)
             # Min over all critic networks
@@ -237,7 +241,13 @@ class OURS(OffPolicyAlgorithm):
             # Compute actor_e loss
             # Alternative: actor_loss = th.mean(log_prob - qf1_pi)
             # Min over all critic networks
-            actions_e_pi = self.actor_e(replay_data.observations, deterministic=True)
+            obs_cp = replay_data.observations.clone().detach().cpu()
+            # actions_e_pi = self.actor_e(replay_data.observations, deterministic=True)
+            # print(actions_e_pi)
+            # actions_e_pi = th.tanh(actions_e_pi)
+            
+            # actions_e_pi = self.actor_e.predict(obs_cp, deterministic=True, wgrad=True)[0]
+            actions_e_pi, _ = self.actor_e.action_log_prob(replay_data.observations, deterministic=True)
             q_values_pi = th.cat(self.critic(replay_data.observations, actions_e_pi), dim=1)
             min_qf_pi, _ = th.min(q_values_pi, dim=1, keepdim=True)
             actor_e_loss = (- min_qf_pi).mean()

@@ -1,5 +1,6 @@
 import gymnasium as gym
 import numpy
+import torch
 
 class GolfEnv(gym.Env):
     def __init__(self, render_mode='rgb_array'):
@@ -12,7 +13,7 @@ class GolfEnv(gym.Env):
 
         self.INIT_POS = (0, 0)
         self.GOAL_POS = (400, 400)
-        self.GREEN_RAD = 200
+        self.GREEN_RAD = 50
 
         self.ACTION_RANGE = 200
 
@@ -61,12 +62,12 @@ class GolfEnv(gym.Env):
         if (new_x - self.GOAL_POS[0]) ** 2 + (new_y - self.GOAL_POS[1]) ** 2 < self.GREEN_RAD ** 2:
             done = True
             rew = 100
-        # elif self.check_OB(self.pos):
-        #     done = True
-        #     rew = -1
+        elif self.check_OB(self.pos):
+            done = True
+            rew = -10
         else:
             done = False
-            rew = -1 / 100 * (((new_x - self.GOAL_POS[0]) ** 2 + (new_y - self.GOAL_POS[1]) ** 2) ** (1/2))
+            rew = -1 / 100 * (((new_x - self.GOAL_POS[0]) ** 2 + (new_y - self.GOAL_POS[1]) ** 2) ** (1/2)) + 10
 
         # return rad_pos, -rad_pos[1] / 10000 if not done else 100, done, self.step_count > 100, {}
         return self.pos, rew, done, self.step_count > self.EP_LEN, {}

@@ -391,6 +391,8 @@ class OffPolicyAlgorithm(BaseAlgorithm):
 
         # Rescale the action from [low, high] to [-1, 1]
         if isinstance(self.action_space, spaces.Box):
+            if not isinstance(unscaled_action, np.ndarray):
+                unscaled_action = unscaled_action.cpu().numpy().reshape((-1, *self.action_space.shape)) 
             scaled_action = self.policy.scale_action(unscaled_action)
 
             # Add noise to the action (improve exploration)

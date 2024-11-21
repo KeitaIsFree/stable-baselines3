@@ -2,10 +2,10 @@ import gymnasium as gym
 import numpy
 
 class AbsEnv(gym.Env):
-    def __init__(self, act_dim=2, obs_dim=1, skew=1, A=0, render_mode='rgb_array'):
+    def __init__(self, act_dim=2, obs_dim=1, skew=10, A=0, render_mode='rgb_array'):
         super(AbsEnv, self).__init__()
         self.observation_space = gym.spaces.Box(low=-1.0, high=1.0, shape=(obs_dim, ))
-        self.action_space = gym.spaces.Box(low=-5.0, high=5.0, shape=(act_dim, ))
+        self.action_space = gym.spaces.Box(low=-1.0, high=1.0, shape=(act_dim, ))
 
         self.A = A
         self.skew = skew
@@ -16,7 +16,7 @@ class AbsEnv(gym.Env):
 
     def step(self, action):
 
-        action = numpy.clip(action, self.action_space.low, self.action_space.high)
+        action = numpy.clip(action, self.action_space.low, self.action_space.high) * 5.0
 
         rew = self.A * self.action_space.shape[0]
 

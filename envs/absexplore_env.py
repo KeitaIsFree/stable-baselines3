@@ -5,7 +5,7 @@ class AbsExploreEnv(gym.Env):
     def __init__(self, act_dim=2, obs_dim=1, skew=1, A=0, render_mode='rgb_array'):
         super(AbsExploreEnv, self).__init__()
         self.observation_space = gym.spaces.Box(low=-1.0, high=1.0, shape=(obs_dim, ))
-        self.action_space = gym.spaces.Box(low=-5.0, high=5.0, shape=(act_dim, ))
+        self.action_space = gym.spaces.Box(low=-1.0, high=1.0, shape=(act_dim, ))
 
         self.A = A
         self.skew = skew
@@ -21,7 +21,7 @@ class AbsExploreEnv(gym.Env):
         rew = self.A * self.action_space.shape[0]
 
         for act_i in range(self.action_space.shape[0]):
-            a = action[act_i]
+            a = action[act_i] * 3.0
             if a < 0:
                 rew += a + 1
             elif a < 1:

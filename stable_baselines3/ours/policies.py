@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional, Tuple, Type, Union
 import torch as th
 from gymnasium import spaces
 from torch import nn
+import torch.nn.functional as F
 
 from stable_baselines3.common.distributions import SquashedDiagGaussianDistribution, StateDependentNoiseDistribution
 from stable_baselines3.common.policies import BasePolicy, ContinuousCritic
@@ -18,10 +19,179 @@ from stable_baselines3.common.torch_layers import (
 from stable_baselines3.common.type_aliases import PyTorchObs, Schedule
 
 import numpy
+import normflows
 
 # CAP the standard deviation of the actor
 LOG_STD_MAX = 2
 LOG_STD_MIN = -20
+
+class NFActor(BasePolicy):
+    """
+    Actor network (policy) for SAC.
+
+    :param observation_space: Observation space
+    :param action_space: Action space
+    :param net_arch: Network architecture
+    :param features_extractor: Network to extract features
+        (a CNN when using images, a nn.Flatten() layer otherwise)
+    :param features_dim: Number of features
+    :param activation_fn: Activation function
+    :param use_sde: Whether to use State Dependent Exploration or not
+    :param log_std_init: Initial value for the log standard deviation
+    :param full_std: Whether to use (n_features x n_actions) parameters
+        for the std instead of only (n_features,) when using gSDE.
+    :param use_expln: Use ``expln()`` function instead of ``exp()`` when using gSDE to ensure
+        a positive standard deviation (cf paper). It allows to keep variance
+        above zero and prevent it from growing too fast. In practice, ``exp()`` is usually enough.
+    :param clip_mean: Clip the mean output when using gSDE to avoid numerical instability.
+    :param normalize_images: Whether to normalize images or not,
+         dividing by 255.0 (True by default)
+    """
+
+    action_space: spaces.Box
+
+    def __init__(
+        self,
+        observation_space: spaces.Space,
+        action_space: spaces.Box,
+        net_arch: List[int],
+        features_extractor: nn.Module,
+        features_dim: int,
+        activation_fn: Type[nn.Module] = nn.ReLU,
+        use_sde: bool = False,
+        log_std_init: float = -3,
+        full_std: bool = True,
+        use_expln: bool = False,
+        clip_mean: float = 2.0,
+        normalize_images: bool = True
+    ):
+        super().__init__(
+            observation_space,
+            action_space,
+            squash_output=True,
+        )
+
+        # Save arguments to re-create object at loading
+        self.use_sde = use_sde
+        self.net_arch = net_arch
+        self.log_std_init = log_std_init
+        self.use_expln = use_expln
+        self.full_std = full_std
+        self.clip_mean = clip_mean
+
+        # 決め打ち
+        self.state_embedding_layer_sizes= (64, 64)
+        self.flow_mlp_sizes=(10,10)
+        self.nf_num_flows=2
+
+        action_dim = get_action_dim(self.action_space)
+        self.act_dim = action_dim
+
+        nfs = []
+        z_size = action_dim
+        latent_size = z_size + self.state_embedding_layer_sizes[0]
+        masks = self.generate_random_masks(z_size, self.nf_num_flows, state_dim=self.state_embedding_layer_sizes[-1])
+        for i in range(self.nf_num_flows):
+            s = normflows.nets.MLP([latent_size, *self.flow_mlp_sizes, latent_size], output_fn="sigmoid", init_zeros=True)
+            t = normflows.nets.MLP([latent_size, *self.flow_mlp_sizes, latent_size], output_fn="sigmoid", init_zeros=True)
+            nfs += [normflows.flows.MaskedAffineFlow(masks[i], t, s)]
+            # nfs += [normflows.flows.ActNorm(latent_size)]
+        self.nfs = nn.ModuleList(nfs)
+
+        s_em = []
+        for layer_i in range(len(self.state_embedding_layer_sizes)):
+            if layer_i == 0:
+                s_em.append(nn.Linear(observation_space.shape[0], self.state_embedding_layer_sizes[layer_i]))
+            else:
+                s_em.append(nn.Linear(self.state_embedding_layer_sizes[layer_i - 1], self.state_embedding_layer_sizes[layer_i]))
+        self.state_embedding = nn.ModuleList(s_em)
+
+    def generate_random_masks(self, z_dim, num_flows, state_dim):
+        assert num_flows > 1
+        masks = []
+        for flow_i in range(num_flows // 2):
+            arr = numpy.array([0] * (z_dim // 2) + [1] * (z_dim - (z_dim // 2)))
+            numpy.random.shuffle(arr)
+            arr = arr.tolist()
+            masks.append(arr)
+            masks.append([(1 - el) for el in arr])
+        if num_flows % 2 == 1:
+            arr = numpy.array([0] * (z_dim // 2) + [1] * (z_dim - (z_dim // 2)))
+            numpy.random.shuffle(arr)
+            arr = arr.tolist()
+            masks.append(arr)
+        return [th.Tensor(mask + [1] * state_dim) for mask in masks]
+
+    def _get_constructor_parameters(self) -> Dict[str, Any]:
+        data = super()._get_constructor_parameters()
+
+        data.update(
+            dict(
+                net_arch=self.net_arch,
+                features_dim=self.features_dim,
+                activation_fn=self.activation_fn,
+                use_sde=self.use_sde,
+                log_std_init=self.log_std_init,
+                full_std=self.full_std,
+                use_expln=self.use_expln,
+                features_extractor=self.features_extractor,
+                clip_mean=self.clip_mean,
+            )
+        )
+        return data
+        
+    def get_std(self) -> th.Tensor:
+        """
+        Retrieve the standard deviation of the action distribution.
+        Only useful when using gSDE.
+        It corresponds to ``th.exp(log_std)`` in the normal case,
+        but is slightly different when using ``expln`` function
+        (cf StateDependentNoiseDistribution doc).
+
+        :return:
+        """
+        msg = "get_std() is only available when using gSDE"
+        # assert isinstance(self.action_dist, StateDependentNoiseDistribution), msg
+        # assert False, 'No STD for NF'
+        # return self.action_dist.get_std(self.log_std)
+        return th.tensor(0.0, dtype=th.float32)
+
+    def reset_noise(self, batch_size: int = 1) -> None:
+        pass
+
+    def forward(self, x: PyTorchObs, deterministic: bool = False) -> th.Tensor:
+        mean = None
+        normal = th.distributions.Normal(th.FloatTensor([[0] * self.act_dim] * len(x)), th.FloatTensor([[1] * self.act_dim] * len(x)))
+        x_t = normal.rsample()
+
+        log_dets = normal.log_prob(x_t)
+        log_dets = th.sum(log_dets, 1).to(self.device)
+    
+        x_ = x
+        for s_em_i in range(len(self.state_embedding) - 1):
+            x_ = F.relu(self.state_embedding[s_em_i](x_))
+        x_ = self.state_embedding[-1](x_)
+        x_t = th.cat((x_t.to(self.device), x_), dim=1)
+        for nf_i in range(self.nf_num_flows):
+            # print(x_t)
+            # print(nf_i)
+            x_t, ld_ = self.nfs[nf_i](x_t)
+            # log_dets = th.add(log_dets, ld_, alpha=-1.0)
+            log_dets = log_dets - ld_
+        x_t = x_t[:, :self.act_dim]
+        return x_t, log_dets
+
+    def action_log_prob(self, obs: PyTorchObs) -> Tuple[th.Tensor, th.Tensor]:
+        mean_actions, log_std = self(obs)
+        # return action and associated log prob
+        return mean_actions, log_std
+
+    def _predict(self, observation: PyTorchObs, deterministic: bool = False) -> th.Tensor:
+        assert not deterministic, 'NF cannot act determinisitically'
+        a = self(observation)[0]
+        # print('NFActor action: ', a)
+        return a
+
 
 
 class Actor(BasePolicy):
@@ -171,13 +341,14 @@ class Actor(BasePolicy):
         # Note: the action is squashed
         return self.action_dist.actions_from_params(mean_actions, log_std, deterministic=deterministic, **kwargs)
 
-    def action_log_prob(self, obs: PyTorchObs) -> Tuple[th.Tensor, th.Tensor]:
+    def action_log_prob(self, obs: PyTorchObs, deterministic=False) -> Tuple[th.Tensor, th.Tensor]:
         mean_actions, log_std, kwargs = self.get_action_dist_params(obs)
         # return action and associated log prob
-        return self.action_dist.log_prob_from_params(mean_actions, log_std, **kwargs)
+        return self.action_dist.log_prob_from_params(mean_actions, log_std, **kwargs, deterministic=deterministic)
 
     def _predict(self, observation: PyTorchObs, deterministic: bool = False) -> th.Tensor:
-        return self(observation, deterministic)
+        a = self(observation, deterministic)
+        return a
 
 
 class OURSPolicy(BasePolicy):
@@ -232,7 +403,8 @@ class OURSPolicy(BasePolicy):
         optimizer_kwargs: Optional[Dict[str, Any]] = None,
         n_critics: int = 2,
         share_features_extractor: bool = False,
-        pi_be_ratio: float = 0.5
+        pi_be_ratio: float = 0.0,
+        pi_b_nf: bool = True
     ):
         super().__init__(
             observation_space,
@@ -282,9 +454,12 @@ class OURSPolicy(BasePolicy):
         self._build(lr_schedule)
 
         self.pi_be_ratio = pi_be_ratio
+        self.pi_b_nf = pi_b_nf
 
     def _build(self, lr_schedule: Schedule) -> None:
-        self.actor_b = self.make_actor()
+        self.actor_b = self.make_actor(nf=True)
+        # self.actor_b = self.make_actor()
+        # print(self.actor_b)
         self.actor_b.optimizer = self.optimizer_class(
             self.actor_b.parameters(),
             lr=lr_schedule(1),  # type: ignore[call-arg]
@@ -292,6 +467,7 @@ class OURSPolicy(BasePolicy):
         )
 
         self.actor_e = self.make_actor()
+        # print(self.actor_e)
         self.actor_e.optimizer = self.optimizer_class(
             self.actor_e.parameters(),
             lr=lr_schedule(1),  # type: ignore[call-arg]
@@ -351,9 +527,12 @@ class OURSPolicy(BasePolicy):
         """
         self.actor_b.reset_noise(batch_size=batch_size)
         
-    def make_actor(self, features_extractor: Optional[BaseFeaturesExtractor] = None) -> Actor:
+    def make_actor(self, features_extractor: Optional[BaseFeaturesExtractor] = None, nf: bool = False) -> Actor:
         actor_kwargs = self._update_features_extractor(self.actor_kwargs, features_extractor)
-        return Actor(**actor_kwargs).to(self.device)
+        if nf:
+            return NFActor(**actor_kwargs).to(self.device)
+        else:
+            return Actor(**actor_kwargs).to(self.device)
 
     def make_critic(self, features_extractor: Optional[BaseFeaturesExtractor] = None) -> ContinuousCritic:
         critic_kwargs = self._update_features_extractor(self.critic_kwargs, features_extractor)
@@ -364,9 +543,9 @@ class OURSPolicy(BasePolicy):
 
     def _predict(self, observation: PyTorchObs, deterministic: bool = False) -> th.Tensor:
         if not deterministic and numpy.random.rand() > self.pi_be_ratio:
-            return self.actor_b(observation)
+            return self.actor_b._predict(observation)
         else:
-            return self.actor_e(observation, True)
+            return self.actor_e._predict(observation, True)
 
     def set_training_mode(self, mode: bool) -> None:
         """

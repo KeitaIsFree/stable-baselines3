@@ -159,7 +159,8 @@ def tfboard2csv(event_acc, path):
 
 # os.chdir('..')
 
-exp_ids = ['Golf-TD3-1e-3', 'Golf-A2C-1e+0', 'Golf-SAC-1e-3']
+# exp_ids = ['Abs-A2C-1e+0-sde', 'Abs-OURS-1e+0-sde-pibe0.0', 'Abs-TD3-1e-3']
+exp_ids = ['Golf-OURS-1e+0-sde', 'Golf-OURS-1e+0-sde-pibe0.5', 'Golf-A2C-1e+0', 'Golf-SAC-1e-5-sde', 'Golf-TD3-1e-3']
 
 plot_datas = {}
 
