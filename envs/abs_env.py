@@ -10,8 +10,11 @@ class AbsEnv(gym.Env):
         self.A = A
         self.skew = skew
 
+        self.time = 0
+
     def reset(self, seed=None, options=None):
         assert options is None
+        self.time = 0
         return numpy.zeros(self.observation_space.shape, dtype=numpy.float32), {}
 
     def step(self, action):
@@ -27,9 +30,11 @@ class AbsEnv(gym.Env):
             else:
                 rew += (- shifted_action * self.skew) - self.A * numpy.cos(shifted_action * self.skew * numpy.pi * 2)
         
+        self.time += 1
+
         rew = -rew
 
-        return numpy.zeros(self.observation_space.shape, dtype=numpy.float32), rew, True, False, {}
+        return numpy.zeros(self.observation_space.shape, dtype=numpy.float32), rew, False, self.time > 5, {}
 
     def render(self):
         assert False

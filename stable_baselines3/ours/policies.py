@@ -403,7 +403,7 @@ class OURSPolicy(BasePolicy):
         optimizer_kwargs: Optional[Dict[str, Any]] = None,
         n_critics: int = 2,
         share_features_extractor: bool = False,
-        pi_be_ratio: float = 0.0,
+        pi_be_ratio: float = 0,
         pi_b_nf: bool = True
     ):
         super().__init__(

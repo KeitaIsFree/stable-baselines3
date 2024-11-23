@@ -103,58 +103,58 @@ def evaluate(
     # # plt.plot([e[0] for e in pos_log], [e[1] for e in pos_log])
     # plt.xlim(-500, 500)
     # plt.ylim(-500, 500)
-    # plt.savefig(f'gaussian_{sys.argv[1]}/checkpoint_{num_timesteps}.png')
+    # # plt.savefig(f'gaussian_{sys.argv[1]}/checkpoint_{num_timesteps}.png')
 
-    q_vals = [[], []]
-    # action_scale = env.action_space.high[0]
-    # ACT_LIM = (-1, )
-    # action_scale = 3.0
-    maxes = [-100, -100]
-    argmaxes = [None, None]
-    for y in numpy.arange(1, -1.00, -0.02):
-        second_values = torch.arange(-1, 1.00, 0.02, dtype=torch.float32)
-        first_values = torch.full((100, ), y, dtype=torch.float32)
-        dummy = torch.stack([first_values, second_values], dim=1).to(device)
-        temp = actor.critic(torch.full((100, 1), 0.0, dtype=torch.float32).to(device), dummy)
-        q_0_vals = temp[0].squeeze(1).tolist()
-        q_vals[0].append(q_0_vals)
-        q_1_vals = temp[1].squeeze(1).tolist()
-        q_vals[1].append(q_1_vals)
+    # q_vals = [[], []]
+    # # action_scale = env.action_space.high[0]
+    # # ACT_LIM = (-1, )
+    # # action_scale = 3.0
+    # maxes = [-100, -100]
+    # argmaxes = [None, None]
+    # for y in numpy.arange(1, -1.00, -0.02):
+    #     second_values = torch.arange(-1, 1.00, 0.02, dtype=torch.float32)
+    #     first_values = torch.full((100, ), y, dtype=torch.float32)
+    #     dummy = torch.stack([first_values, second_values], dim=1).to(device)
+    #     temp = actor.critic(torch.full((100, 1), 0.0, dtype=torch.float32).to(device), dummy)
+    #     q_0_vals = temp[0].squeeze(1).tolist()
+    #     q_vals[0].append(q_0_vals)
+    #     q_1_vals = temp[1].squeeze(1).tolist()
+    #     q_vals[1].append(q_1_vals)
 
-        max_in_row = max(q_0_vals)
-        if max_in_row > maxes[0]:
-            argmaxes[0] = (numpy.argmax(q_0_vals) /50 - 1, y)
-            maxes[0] = max_in_row
+    #     max_in_row = max(q_0_vals)
+    #     if max_in_row > maxes[0]:
+    #         argmaxes[0] = (numpy.argmax(q_0_vals) /50 - 1, y)
+    #         maxes[0] = max_in_row
 
-        max_in_row = max(q_1_vals)
-        if max_in_row > maxes[1]:
-            argmaxes[1] = (numpy.argmax(q_1_vals) /50 - 1, y)
-            maxes[1] = max_in_row
+    #     max_in_row = max(q_1_vals)
+    #     if max_in_row > maxes[1]:
+    #         argmaxes[1] = (numpy.argmax(q_1_vals) /50 - 1, y)
+    #         maxes[1] = max_in_row
 
-    for i in range(2):
-        plt.clf()
-        plt.imshow(q_vals[i-1], cmap='viridis', aspect='auto', extent=[-1, 1, -1, 1])
-        plt.plot(action[0], action[1], markersize=10, marker='x', c='r')
-        plt.text(action[0], action[1], 'pi_e')
-        plt.plot(argmaxes[i][0], argmaxes[i][1], markersize=10, marker='x', c='g')
-        plt.text(argmaxes[i][0], argmaxes[i][1], 'max')
-        plt.colorbar()  # Adds a colorbar to the side
-        plt.title('Heatmap')
-        plt.xlabel('X-axis')
-        plt.ylabel('Y-axis')
-        plt.savefig(f'gaussian_{seed}/{num_timesteps}_q{i}.png')
+    # for i in range(2):
+    #     plt.clf()
+    #     plt.imshow(q_vals[i-1], cmap='viridis', aspect='auto', extent=[-1, 1, -1, 1])
+    #     plt.plot(action[0], action[1], markersize=10, marker='x', c='r')
+    #     plt.text(action[0], action[1], 'pi_e')
+    #     plt.plot(argmaxes[i][0], argmaxes[i][1], markersize=10, marker='x', c='g')
+    #     plt.text(argmaxes[i][0], argmaxes[i][1], 'max')
+    #     plt.colorbar()  # Adds a colorbar to the side
+    #     plt.title('Heatmap')
+    #     plt.xlabel('X-axis')
+    #     plt.ylabel('Y-axis')
+    #     plt.savefig(f'gaussian_{seed}/{num_timesteps}_q{i}.png')
 
 
     return ep_r
 
 results = []
-TOTAL_TIMESTEPS = 100000
-ALGO = 'OURS'
+TOTAL_TIMESTEPS = 10000
+ALGO = 'SAC'
 PARAM = 1e-3
 
-ENV_NAME = 'AbsExploreEnv-v0'
-EXP_NAME = f'{ENV_NAME}-{ALGO}-{PARAM}_nf'
-DEVICE = 'cuda:2'
+ENV_NAME = 'AbsEnv-v0'
+EXP_NAME = f'{ENV_NAME}-step5-{ALGO}-{PARAM}_gauss'
+DEVICE = 'cuda:0'
 
 class evaluateCallback(BaseCallback):
     def __init__(self, verbose=0):
