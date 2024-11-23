@@ -1,6 +1,6 @@
 
 
-from stable_baselines3 import A2C, TD3, SAC, OURS
+from stable_baselines3 import A2C, TD3, SAC, OURS, PPO
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import SubprocVecEnv
 
@@ -109,7 +109,7 @@ def evaluate(
     # action_scale = env.action_space.high[0]
     # ACT_LIM = (-1, )
     # action_scale = 3.0
-    if ALGO == 'A2C':
+    if ALGO == 'A2C' or ALGO == 'PPO':
         return ep_r
     maxes = [-100, -100]
     argmaxes = [None, None]
@@ -121,7 +121,6 @@ def evaluate(
             temp = actor.critic(torch.full((100, 1), 0.0, dtype=torch.float32).to(device), dummy)
         else:
             temp = [actor.policy.evaluate_actions(torch.full((100, 1), 0.0, dtype=torch.float32).to(device), dummy)[0]]
-        print(temp)
         if len(temp) > 1:
             q_0_vals = temp[0].squeeze(1).tolist()
             q_vals[0].append(q_0_vals)
@@ -159,13 +158,16 @@ def evaluate(
     return ep_r
 
 results = []
-TOTAL_TIMESTEPS = 100000
-ALGO = 'A2C'
+TOTAL_TIMESTEPS = 200000
+ALGO = 'PPO'
 PARAM = 1e-3
 
 ENV_NAME = 'AbsEnv-v0'
-EXP_NAME = f'{ENV_NAME}-step10-clip-long-hilr-{ALGO}-{PARAM}_gauss'
+EXP_NAME = f'{ENV_NAME}-extralong-{ALGO}-{PARAM}_gauss'
 DEVICE = 'cuda:1'
+
+ALGO = sys.argv[2]
+DEVICE = sys.argv[3]
 
 class evaluateCallback(BaseCallback):
     def __init__(self, verbose=0):

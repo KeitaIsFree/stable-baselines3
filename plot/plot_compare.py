@@ -159,7 +159,7 @@ def tfboard2csv(event_acc, path):
 
 # os.chdir('..')
 
-exp_ids = ['AbsEnv-v0-A2C-0.001_gauss', 'AbsEnv-v0-SAC-0.001_gauss', 'AbsEnv-v0-TD3-0.001_gauss', 'AbsEnv-v0-OURS-0.001_gauss']
+exp_ids = ['AbsEnv-v0-step10-clip-long-A2C-0.001_gauss', 'AbsEnv-v0-step10-clip-long-SAC-0.001_gauss', 'AbsEnv-v0-step10-clip-long-PPO-0.001_gauss', 'AbsEnv-v0-step10-clip-long-OURS-0.001_gauss']
 # exp_ids = ['AbsExploreEnv-v0-OURS-0.001_gauss', 'AbsExploreEnv-v0-OURS-0.001_nf', 'AbsExploreEnv-v0-OURS-0.001_pibe0.0_gauss', 'AbsExploreEnv-v0-OURS-0.001_pibe0.0_nf']
 # exp_ids = ['AbsExploreEnv-v0-OURS-0.001_gauss', 'AbsExploreEnv-v0-OURS-0.001_nf']
 
