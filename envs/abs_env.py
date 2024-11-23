@@ -11,6 +11,7 @@ class AbsEnv(gym.Env):
         self.skew = skew
 
         self.time = 0
+        self.max_time = 10
 
     def reset(self, seed=None, options=None):
         assert options is None
@@ -26,15 +27,15 @@ class AbsEnv(gym.Env):
         for act_i in range(self.action_space.shape[0]):
             shifted_action = action[act_i] + 1
             if shifted_action > 0:
-                rew += shifted_action - self.A * numpy.cos(shifted_action * numpy.pi * 2)
+                rew += min(5, shifted_action - self.A * numpy.cos(shifted_action * numpy.pi * 2))
             else:
-                rew += (- shifted_action * self.skew) - self.A * numpy.cos(shifted_action * self.skew * numpy.pi * 2)
+                rew += min(5, (- shifted_action * self.skew) - self.A * numpy.cos(shifted_action * self.skew * numpy.pi * 2))
         
         self.time += 1
 
         rew = -rew
 
-        return numpy.zeros(self.observation_space.shape, dtype=numpy.float32), rew, False, self.time > 5, {}
+        return numpy.zeros(self.observation_space.shape, dtype=numpy.float32), rew, self.max_time == 0, self.time > 5, {}
 
     def render(self):
         assert False
