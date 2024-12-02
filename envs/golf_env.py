@@ -29,7 +29,7 @@ class GolfEnv(gym.Env):
         self.step_count = 1
         self.pos = self.INIT_POS
         # return self.xy2rad(self.pos), {}
-        return self.pos, {}
+        return numpy.array(self.pos, dtype=numpy.float32), {}
     
     def check_OB(self, pos):
         if pos[0] ** 2 + pos[1] ** 2 < self.GREEN_RAD ** 2:
@@ -62,15 +62,15 @@ class GolfEnv(gym.Env):
         if (new_x - self.GOAL_POS[0]) ** 2 + (new_y - self.GOAL_POS[1]) ** 2 < self.GREEN_RAD ** 2:
             done = True
             rew = 100
-        elif self.check_OB(self.pos):
-            done = True
-            rew = -10
+        # elif self.check_OB(self.pos):
+        #     done = True
+        #     rew = -10
         else:
             done = False
-            rew = -1 / 100 * (((new_x - self.GOAL_POS[0]) ** 2 + (new_y - self.GOAL_POS[1]) ** 2) ** (1/2)) + 10
+            rew = -1 / 100 * (((new_x - self.GOAL_POS[0]) ** 2 + (new_y - self.GOAL_POS[1]) ** 2) ** (1/2))
 
         # return rad_pos, -rad_pos[1] / 10000 if not done else 100, done, self.step_count > 100, {}
-        return self.pos, rew, done, self.step_count > self.EP_LEN, {}
+        return numpy.array(self.pos, dtype=numpy.float32), numpy.array(rew, dtype=numpy.float32), done, self.step_count > self.EP_LEN, {}
 
     def render(self):
         assert False

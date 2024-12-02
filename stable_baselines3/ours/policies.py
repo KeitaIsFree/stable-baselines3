@@ -457,8 +457,8 @@ class OURSPolicy(BasePolicy):
         self.pi_b_nf = pi_b_nf
 
     def _build(self, lr_schedule: Schedule) -> None:
-        # self.actor_b = self.make_actor(nf=True)
-        self.actor_b = self.make_actor()
+        self.actor_b = self.make_actor(nf=True)
+        # self.actor_b = self.make_actor()
         # print(self.actor_b)
         self.actor_b.optimizer = self.optimizer_class(
             self.actor_b.parameters(),

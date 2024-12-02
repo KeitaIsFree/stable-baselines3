@@ -40,4 +40,4 @@ ax.legend()
 # Show plot
 plt.tight_layout()
 
-plt.savefig('histogram.pdf')
+plt.savefig('histogram.eps')

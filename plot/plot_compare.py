@@ -86,9 +86,9 @@ def take_mean_stds(groups, datas, key="charts/train_return"):
             if len(datas) > 0:
                 means.append(numpy.mean(datas, axis=0))
                 stds.append(numpy.std(datas, axis=0))
-            else:
-                means.append(means[-1])
-                stds.append(stds[-1])
+            # else:
+            #     means.append(means[-1])
+            #     stds.append(stds[-1])
 
 
         # means = numpy.mean(values, axis=0)
@@ -158,8 +158,8 @@ def tfboard2csv(event_acc, path):
 
 
 # os.chdir('..')
-
-exp_ids = ['AbsEnv-v0-step10-clip-long-A2C-0.001_gauss', 'AbsEnv-v0-step10-clip-long-SAC-0.001_gauss', 'AbsEnv-v0-step10-clip-long-PPO-0.001_gauss', 'AbsEnv-v0-step10-clip-long-OURS-0.001_gauss']
+exp_ids = ['AbsEnv-v0-step10-clip-long-SAC-0.001_gauss', 'AbsEnv-v0-step10-clip-long-A2C-0.001_gauss', 'AbsEnv-v0-step10-clip-long-PPO-0.001_gauss', 'AbsEnv-v0-step10-clip-long-OURS-0.001_gauss']
+# exp_ids = ['AbsEnv-v0-extralong-SAC-0.01_gauss', 'AbsEnv-v0-extralong-A2C-0.01_gauss',  'AbsEnv-v0-extralong-OURS-0.01_gauss']
 # exp_ids = ['AbsExploreEnv-v0-OURS-0.001_gauss', 'AbsExploreEnv-v0-OURS-0.001_nf', 'AbsExploreEnv-v0-OURS-0.001_pibe0.0_gauss', 'AbsExploreEnv-v0-OURS-0.001_pibe0.0_nf']
 # exp_ids = ['AbsExploreEnv-v0-OURS-0.001_gauss', 'AbsExploreEnv-v0-OURS-0.001_nf']
 
@@ -206,11 +206,13 @@ for exp_id in exp_ids:
     base_dir = f'results/{exp_id}'
 
 
-x = numpy.linspace(0, 1, len(plot_datas[exp_ids[0]]['means']['pi_eval']))
 
 for exp_id in exp_ids:
     # plt.plot(x, plot_datas[exp_id]['means']['pi_b'], label=exp_id + '_pi_b')
-    plt.plot(x, plot_datas[exp_id]['means']['pi_eval'], label=exp_id + '_pi_eval')
+    print(exp_id)
+    x = numpy.linspace(0, 100000, len(plot_datas[exp_id]['means']['pi_eval']))
+    exp_label = exp_id.split('_')[0].split('-')[-2]
+    plt.plot(x, plot_datas[exp_id]['means']['pi_eval'], label=exp_label)
     # plt.fill_between(x, plot_datas[exp_id]['means']['pi_b'] + plot_datas[exp_id]['stds']['pi_b'], plot_datas[exp_id]['means']['pi_b'] - plot_datas[exp_id]['stds']['pi_b'], alpha=0.1)
     plt.fill_between(x, plot_datas[exp_id]['means']['pi_eval'] + plot_datas[exp_id]['stds']['pi_eval'], plot_datas[exp_id]['means']['pi_eval'] - plot_datas[exp_id]['stds']['pi_eval'], alpha=0.1)
 
@@ -225,4 +227,4 @@ plt.title("Episode Return")
 base_dir = base_dir.split('_')[0]
 os.makedirs(f'{base_dir}', exist_ok=True)
 # plt.show()
-plt.savefig(f'{base_dir}/evals.pdf')
+plt.savefig(f'{base_dir}/evals.eps')

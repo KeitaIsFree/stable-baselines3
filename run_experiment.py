@@ -3,6 +3,7 @@
 from stable_baselines3 import A2C, TD3, SAC, OURS, PPO
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import SubprocVecEnv
+from stable_baselines3.common.callbacks import CheckpointCallback
 
 import numpy
 
@@ -94,80 +95,83 @@ def evaluate(
             break
     
 
-    # # plt.clf()
+    # plt.clf()
     # for i in range(1, len(pos_log)):
     #     marker = 'X' if ob_log[i] else 'o'
     #     c = 'r' if ob_log[i] else 'b'
     #     c = colorsys.hsv_to_rgb(max(0, float(r_log[i] + 300) / 500), 1, 1)
-    #     plt.scatter(pos_log[i][0], pos_log[i][1], marker=marker, c=[c])
+    #     plt.scatter(pos_log[i][0], pos_log[i][1], marker=marker, c=[c], alpha=0.5)
     # # plt.plot([e[0] for e in pos_log], [e[1] for e in pos_log])
-    # plt.xlim(-500, 500)
-    # plt.ylim(-500, 500)
-    # # plt.savefig(f'gaussian_{sys.argv[1]}/checkpoint_{num_timesteps}.png')
+    # plt.xlim(-1000, 1000)
+    # plt.ylim(-1000, 1000)
+    # plt.savefig(f'gaussian_{sys.argv[1]}/checkpoint_{num_timesteps}.png')
+    # plt.savefig(f'gaussian_{sys.argv[1]}/checkpoint_{num_timesteps}.eps')
 
-    q_vals = [[], []]
-    # action_scale = env.action_space.high[0]
-    # ACT_LIM = (-1, )
-    # action_scale = 3.0
-    if ALGO == 'A2C' or ALGO == 'PPO':
-        return ep_r
-    maxes = [-100, -100]
-    argmaxes = [None, None]
-    for y in numpy.arange(1, -1.00, -0.02):
-        second_values = torch.arange(-1, 1.00, 0.02, dtype=torch.float32)
-        first_values = torch.full((100, ), y, dtype=torch.float32)
-        dummy = torch.stack([first_values, second_values], dim=1).to(device)
-        if hasattr(actor, 'critic'):
-            temp = actor.critic(torch.full((100, 1), 0.0, dtype=torch.float32).to(device), dummy)
-        else:
-            temp = [actor.policy.evaluate_actions(torch.full((100, 1), 0.0, dtype=torch.float32).to(device), dummy)[0]]
-        if len(temp) > 1:
-            q_0_vals = temp[0].squeeze(1).tolist()
-            q_vals[0].append(q_0_vals)
-            q_1_vals = temp[1].squeeze(1).tolist()
-            q_vals[1].append(q_1_vals)
-        else:
-            q_0_vals = temp[0].squeeze().tolist()
-            q_vals[0].append(q_0_vals)
+    # q_vals = [[], []]
+    # # action_scale = env.action_space.high[0]
+    # # ACT_LIM = (-1, )
+    # # action_scale = 3.0
+    # if ALGO == 'A2C' or ALGO == 'PPO':
+    #     return ep_r
+    # maxes = [-100, -100]
+    # argmaxes = [None, None]
+    # for y in numpy.arange(1, -1.00, -0.02):
+    #     second_values = torch.arange(-1, 1.00, 0.02, dtype=torch.float32)
+    #     first_values = torch.full((100, ), y, dtype=torch.float32)
+    #     dummy = torch.stack([first_values, second_values], dim=1).to(device)
+    #     if hasattr(actor, 'critic'):
+    #         temp = actor.critic(torch.full((100, 1), 0.0, dtype=torch.float32).to(device), dummy)
+    #     else:
+    #         temp = [actor.policy.evaluate_actions(torch.full((100, 1), 0.0, dtype=torch.float32).to(device), dummy)[0]]
+    #     if len(temp) > 1:
+    #         q_0_vals = temp[0].squeeze(1).tolist()
+    #         q_vals[0].append(q_0_vals)
+    #         q_1_vals = temp[1].squeeze(1).tolist()
+    #         q_vals[1].append(q_1_vals)
+    #     else:
+    #         q_0_vals = temp[0].squeeze().tolist()
+    #         q_vals[0].append(q_0_vals)
 
-        max_in_row = max(q_0_vals)
-        if max_in_row > maxes[0]:
-            argmaxes[0] = (numpy.argmax(q_0_vals) /50 - 1, y)
-            maxes[0] = max_in_row
+    #     max_in_row = max(q_0_vals)
+    #     if max_in_row > maxes[0]:
+    #         argmaxes[0] = (numpy.argmax(q_0_vals) /50 - 1, y)
+    #         maxes[0] = max_in_row
 
-        if len(temp) > 1:
-            max_in_row = max(q_1_vals)
-            if max_in_row > maxes[1]:
-                argmaxes[1] = (numpy.argmax(q_1_vals) /50 - 1, y)
-                maxes[1] = max_in_row
+    #     if len(temp) > 1:
+    #         max_in_row = max(q_1_vals)
+    #         if max_in_row > maxes[1]:
+    #             argmaxes[1] = (numpy.argmax(q_1_vals) /50 - 1, y)
+    #             maxes[1] = max_in_row
 
-    for i in range(len(temp)):
-        plt.clf()
-        plt.imshow(q_vals[i], cmap='viridis', aspect='auto', extent=[-1, 1, -1, 1])
-        plt.plot(action[0], action[1], markersize=10, marker='x', c='r')
-        plt.text(action[0], action[1], 'pi_e')
-        plt.plot(argmaxes[i][0], argmaxes[i][1], markersize=10, marker='x', c='g')
-        plt.text(argmaxes[i][0], argmaxes[i][1], 'max')
-        plt.colorbar()  # Adds a colorbar to the side
-        plt.title('Heatmap')
-        plt.xlabel('X-axis')
-        plt.ylabel('Y-axis')
-        plt.savefig(f'gaussian_{seed}/{num_timesteps}_q{i}.png')
+    # for i in range(len(temp)):
+    #     plt.clf()
+    #     plt.imshow(q_vals[i], cmap='viridis', aspect='auto', extent=[-1, 1, -1, 1])
+    #     plt.plot(action[0], action[1], markersize=10, marker='x', c='r')
+    #     plt.text(action[0], action[1], 'pi_e')
+    #     plt.plot(argmaxes[i][0], argmaxes[i][1], markersize=10, marker='x', c='g')
+    #     plt.text(argmaxes[i][0], argmaxes[i][1], 'max')
+    #     plt.colorbar()  # Adds a colorbar to the side
+    #     plt.title('Heatmap')
+    #     plt.xlabel('X-axis')
+    #     plt.ylabel('Y-axis')
+    #     plt.savefig(f'gaussian_{seed}/{num_timesteps}_q{i}.eps')
 
 
     return ep_r
 
 results = []
-TOTAL_TIMESTEPS = 200000
-ALGO = 'PPO'
-PARAM = 1e-3
-
-ENV_NAME = 'AbsEnv-v0'
-EXP_NAME = f'{ENV_NAME}-extralong-{ALGO}-{PARAM}_gauss'
-DEVICE = 'cuda:1'
-
+TOTAL_TIMESTEPS = 500000
+PARAM = 1e-2
 ALGO = sys.argv[2]
 DEVICE = sys.argv[3]
+ENV_NAME = sys.argv[4]
+
+# ENV_NAME = 'GolfEnv-v0'
+EXP_NAME = f'{ENV_NAME}-{ALGO}-{PARAM}'
+
+if ALGO == 'OURS':
+    EXP_NAME = EXP_NAME + "_nf"
+
 
 class evaluateCallback(BaseCallback):
     def __init__(self, verbose=0):
@@ -196,13 +200,14 @@ if __name__=="__main__":
     os.chdir(f'runs/{EXP_NAME}')
     os.makedirs(f'gaussian_{seed}', exist_ok=True)
 
-
+    checkpoint_callback = CheckpointCallback(save_freq=TOTAL_TIMESTEPS//100, save_path='./checkpoints/')
+    
     env = make_vec_env(ENV_NAME, n_envs=1, vec_env_cls=SubprocVecEnv)
     if ALGO == 'TD3':
-        assert PARAM == 0.001, "SET CORRECT PARAM!!!!!\nPLZ!!"
-        model = TD3("MlpPolicy", env, device=DEVICE, action_noise=NormalActionNoise(numpy.zeros(2), numpy.ones(2) / 1000), tensorboard_log=f'.', seed=seed)
+        assert PARAM == 0.01, "SET CORRECT PARAM!!!!!\nPLZ!!"
+        model = TD3("MlpPolicy", env, device=DEVICE, action_noise=NormalActionNoise(numpy.zeros(2), numpy.ones(2) / 100), tensorboard_log=f'.', seed=seed)
     elif ALGO == 'A2C':
-        model = A2C("MlpPolicy", env, device=DEVICE, ent_coef=PARAM, learning_rate=0.007, tensorboard_log=f'.')
+        model = A2C("MlpPolicy", env, device=DEVICE, ent_coef=PARAM, tensorboard_log=f'.')
     elif ALGO == 'SAC':
         model = SAC("MlpPolicy", env, device=DEVICE, ent_coef=PARAM, tensorboard_log=f'.', use_sde=True)
     elif ALGO == 'PPO':
@@ -210,7 +215,7 @@ if __name__=="__main__":
     elif ALGO == 'OURS':
         model = OURS("MlpPolicy", env, device=DEVICE, ent_coef=PARAM, tensorboard_log=f'.', use_sde=True)
 
-    model.learn(total_timesteps=TOTAL_TIMESTEPS, callback=evaluateCallback())
+    model.learn(total_timesteps=TOTAL_TIMESTEPS, callback=[evaluateCallback(), checkpoint_callback])
     # results.append(evaluate(make_env, "AbsEnv-v0", 1, "ppp", model, skew=10))
 
     # with open(f'gaussian_{seed}/scalars/charts/eval_return', 'w') as f:
