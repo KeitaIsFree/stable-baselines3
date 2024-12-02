@@ -161,7 +161,7 @@ def evaluate(
 
 results = []
 TOTAL_TIMESTEPS = 500000
-PARAM = 1e-2
+PARAM = 1e-3
 ALGO = sys.argv[2]
 DEVICE = sys.argv[3]
 ENV_NAME = sys.argv[4]

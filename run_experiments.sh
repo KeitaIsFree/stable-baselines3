@@ -16,15 +16,15 @@ for SEED in ${SEEDS[@]}; do
     python 'run_experiment.py' $SEED "OURS" "cuda:2" $ENV_NAME &
 done
 
-wait 
+# wait 
 
-for SEED in ${SEEDS[@]}; do
-    python 'run_experiment.py' $SEED "PPO" "cuda:0" $ENV_NAME &
-done
+# for SEED in ${SEEDS[@]}; do
+#     python 'run_experiment.py' $SEED "PPO" "cuda:0" $ENV_NAME &
+# done
 
-for SEED in ${SEEDS[@]}; do
-    python 'run_experiment.py' $SEED "TD3" "cuda:1" $ENV_NAME &
-done
+# for SEED in ${SEEDS[@]}; do
+#     python 'run_experiment.py' $SEED "TD3" "cuda:1" $ENV_NAME &
+# done
 
 # for SEED in ${SEEDS[@]}; do
 #     python 'run_experiment.py' $SEED "OURS" "cuda:0" &
