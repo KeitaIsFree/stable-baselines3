@@ -453,6 +453,8 @@ class OURSPolicy(BasePolicy):
 
         self._build(lr_schedule)
 
+        self.ent_coef_tensor = None
+
         self.pi_be_ratio = pi_be_ratio
         self.pi_b_nf = pi_b_nf
 
