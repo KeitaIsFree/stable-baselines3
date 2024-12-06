@@ -116,8 +116,6 @@ def evaluate(
     maxes = [-100, -100]
     argmaxes = [None, None]
     pi_p = []
-    pi_p_x = []
-    pi_p_y = []
     for y in numpy.arange(1, -1.00, -0.02):
         second_values = torch.arange(-1, 1.00, 0.02, dtype=torch.float32)
         first_values = torch.full((100, ), y, dtype=torch.float32)
@@ -128,8 +126,6 @@ def evaluate(
             temp = [actor.policy.evaluate_actions(torch.full((100, 1), 0.0, dtype=torch.float32).to(device), dummy)[0]]
         probs = actor.actor_b.get_log_prob_from_act(torch.full((100, 1), 0.0, dtype=torch.float32).to(device), dummy).tolist()
         pi_p.append(probs)
-        pi_p_x += second_values
-        pi_p_y += first_values.tolist()
         if len(temp) > 1:
             q_0_vals = temp[0].squeeze(1).tolist()
             q_vals[0].append(q_0_vals)
@@ -150,9 +146,13 @@ def evaluate(
                 argmaxes[1] = (numpy.argmax(q_1_vals) /50 - 1, y)
                 maxes[1] = max_in_row
 
+    x = numpy.linspace(-1, 1, 100)  # 100 points from -5 to 5
+    y = numpy.linspace(-1, 1, 100)
+    X, Y = numpy.meshgrid(x,y)
+
     for i in range(len(temp)):
         plt.clf()
-        plt.contour( pi_p)
+        plt.contour(X, Y, pi_p)
         plt.imshow(q_vals[i], cmap='viridis', aspect='auto', extent=[-1, 1, -1, 1])
         plt.plot(action[0], action[1], markersize=10, marker='x', c='r')
         plt.text(action[0], action[1], 'pi_e')

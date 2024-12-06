@@ -180,6 +180,50 @@ class NFActor(BasePolicy):
             log_dets = log_dets - ld_
         x_t = x_t[:, :self.act_dim]
         return x_t, log_dets
+    
+    def get_log_prob_from_act(self, s, a):
+        s_ = s
+        s_.to(self.device)
+        a.to(self.device)
+        for s_em_i in range(len(self.state_embedding) - 1):
+            s_ = F.relu(self.state_embedding[s_em_i](s_))
+        s_ = self.state_embedding[-1](s_)
+        x_t = th.cat((a, s_), dim=1)
+        # print(x_t)
+        x_t_ = x_t.detach().clone()
+
+        log_det = th.zeros(len(x_t), device=self.device)
+        for i in range(len(self.nfs) - 1, -1, -1):
+            x_t, log_d = self.nfs[i].inverse(x_t)
+            # print(x_t)
+            # print(log_d)
+            log_det += log_d
+
+        normal = th.distributions.Normal(th.zeros((self.act_dim,), device=self.device), th.ones((self.act_dim,), device=self.device))
+
+        z_prob = normal.log_prob(x_t[:,:self.act_dim])
+        log_det += z_prob.sum(dim=1)
+
+        # print(self.nfs[0](th.ones((4,), device=self.device)))
+        # print(self.nfs[0])
+
+        # log_det = th.zeros(len(x_t), device=self.device)
+
+        # for i in range(len(self.nfs)):
+        #     x_t, log_d = self.nfs[i](x_t)
+        #     log_det -= log_d
+
+        # log_dets = []
+        # for i in range(len(s)):
+        #     log_det = th.zeros(1, device=self.device)
+        #     x_t_ = x_t[i]
+        #     for i in range(len(self.nfs)):
+        #         x_t_, log_d = self.nfs[-i].inverse(x_t_)
+        #         print(x_t_)
+        #         print(log_d)
+        #         log_det += log_d
+        #     log_dets.append(log_det)
+        return log_det
 
     def action_log_prob(self, obs: PyTorchObs) -> Tuple[th.Tensor, th.Tensor]:
         mean_actions, log_std = self(obs)
