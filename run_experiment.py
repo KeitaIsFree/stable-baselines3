@@ -107,70 +107,81 @@ def evaluate(
     # plt.savefig(f'gaussian_{sys.argv[1]}/checkpoint_{num_timesteps}.png')
     # plt.savefig(f'gaussian_{sys.argv[1]}/checkpoint_{num_timesteps}.eps')
 
-    # q_vals = [[], []]
-    # # action_scale = env.action_space.high[0]
-    # # ACT_LIM = (-1, )
-    # # action_scale = 3.0
-    # if ALGO == 'A2C' or ALGO == 'PPO':
-    #     return ep_r
-    # maxes = [-100, -100]
-    # argmaxes = [None, None]
-    # for y in numpy.arange(1, -1.00, -0.02):
-    #     second_values = torch.arange(-1, 1.00, 0.02, dtype=torch.float32)
-    #     first_values = torch.full((100, ), y, dtype=torch.float32)
-    #     dummy = torch.stack([first_values, second_values], dim=1).to(device)
-    #     if hasattr(actor, 'critic'):
-    #         temp = actor.critic(torch.full((100, 1), 0.0, dtype=torch.float32).to(device), dummy)
-    #     else:
-    #         temp = [actor.policy.evaluate_actions(torch.full((100, 1), 0.0, dtype=torch.float32).to(device), dummy)[0]]
-    #     if len(temp) > 1:
-    #         q_0_vals = temp[0].squeeze(1).tolist()
-    #         q_vals[0].append(q_0_vals)
-    #         q_1_vals = temp[1].squeeze(1).tolist()
-    #         q_vals[1].append(q_1_vals)
-    #     else:
-    #         q_0_vals = temp[0].squeeze().tolist()
-    #         q_vals[0].append(q_0_vals)
+    q_vals = [[], []]
+    # action_scale = env.action_space.high[0]
+    # ACT_LIM = (-1, )
+    # action_scale = 3.0
+    if ALGO == 'A2C' or ALGO == 'PPO':
+        return ep_r
+    maxes = [-100, -100]
+    argmaxes = [None, None]
+    pi_p = []
+    pi_p_x = []
+    pi_p_y = []
+    for y in numpy.arange(1, -1.00, -0.02):
+        second_values = torch.arange(-1, 1.00, 0.02, dtype=torch.float32)
+        first_values = torch.full((100, ), y, dtype=torch.float32)
+        dummy = torch.stack([first_values, second_values], dim=1).to(device)
+        if hasattr(actor, 'critic'):
+            temp = actor.critic(torch.full((100, 1), 0.0, dtype=torch.float32).to(device), dummy)
+        else:
+            temp = [actor.policy.evaluate_actions(torch.full((100, 1), 0.0, dtype=torch.float32).to(device), dummy)[0]]
+        probs = actor.actor_b.get_log_prob_from_act(torch.full((100, 1), 0.0, dtype=torch.float32).to(device), dummy).tolist()
+        pi_p.append(probs)
+        pi_p_x += second_values
+        pi_p_y += first_values.tolist()
+        if len(temp) > 1:
+            q_0_vals = temp[0].squeeze(1).tolist()
+            q_vals[0].append(q_0_vals)
+            q_1_vals = temp[1].squeeze(1).tolist()
+            q_vals[1].append(q_1_vals)
+        else:
+            q_0_vals = temp[0].squeeze().tolist()
+            q_vals[0].append(q_0_vals)
 
-    #     max_in_row = max(q_0_vals)
-    #     if max_in_row > maxes[0]:
-    #         argmaxes[0] = (numpy.argmax(q_0_vals) /50 - 1, y)
-    #         maxes[0] = max_in_row
+        max_in_row = max(q_0_vals)
+        if max_in_row > maxes[0]:
+            argmaxes[0] = (numpy.argmax(q_0_vals) /50 - 1, y)
+            maxes[0] = max_in_row
 
-    #     if len(temp) > 1:
-    #         max_in_row = max(q_1_vals)
-    #         if max_in_row > maxes[1]:
-    #             argmaxes[1] = (numpy.argmax(q_1_vals) /50 - 1, y)
-    #             maxes[1] = max_in_row
+        if len(temp) > 1:
+            max_in_row = max(q_1_vals)
+            if max_in_row > maxes[1]:
+                argmaxes[1] = (numpy.argmax(q_1_vals) /50 - 1, y)
+                maxes[1] = max_in_row
 
-    # for i in range(len(temp)):
-    #     plt.clf()
-    #     plt.imshow(q_vals[i], cmap='viridis', aspect='auto', extent=[-1, 1, -1, 1])
-    #     plt.plot(action[0], action[1], markersize=10, marker='x', c='r')
-    #     plt.text(action[0], action[1], 'pi_e')
-    #     plt.plot(argmaxes[i][0], argmaxes[i][1], markersize=10, marker='x', c='g')
-    #     plt.text(argmaxes[i][0], argmaxes[i][1], 'max')
-    #     plt.colorbar()  # Adds a colorbar to the side
-    #     plt.title('Heatmap')
-    #     plt.xlabel('X-axis')
-    #     plt.ylabel('Y-axis')
-    #     plt.savefig(f'gaussian_{seed}/{num_timesteps}_q{i}.eps')
+    for i in range(len(temp)):
+        plt.clf()
+        plt.contour( pi_p)
+        plt.imshow(q_vals[i], cmap='viridis', aspect='auto', extent=[-1, 1, -1, 1])
+        plt.plot(action[0], action[1], markersize=10, marker='x', c='r')
+        plt.text(action[0], action[1], 'pi_e')
+        plt.plot(argmaxes[i][0], argmaxes[i][1], markersize=10, marker='x', c='g')
+        plt.text(argmaxes[i][0], argmaxes[i][1], 'max')
+        plt.colorbar()  # Adds a colorbar to the side
+        plt.title('Heatmap')
+        plt.xlabel('X-axis')
+        plt.ylabel('Y-axis')
+        plt.savefig(f'gaussian_{seed}/{num_timesteps}_q{i}.pdf')
+
 
 
     return ep_r
 
 results = []
-TOTAL_TIMESTEPS = 500000
+TOTAL_TIMESTEPS = 10000
 PARAM = 1e-3
 ALGO = sys.argv[2]
 DEVICE = sys.argv[3]
 ENV_NAME = sys.argv[4]
 
 # ENV_NAME = 'GolfEnv-v0'
-EXP_NAME = f'{ENV_NAME}-{ALGO}-{PARAM}'
+EXP_NAME = f'{ENV_NAME}-{ALGO}-{PARAM}_nf'
 
-if ALGO == 'OURS':
-    EXP_NAME = EXP_NAME + "_nf"
+# if ALGO == 'OURS':
+#     EXP_NAME = EXP_NAME + "_nf"
+
+EXP_NAME = 'test'
 
 
 class evaluateCallback(BaseCallback):
