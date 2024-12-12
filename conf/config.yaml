@@ -1,0 +1,23 @@
+TOTAL_TIMESTEPS: 200000
+PARAM: 0.001
+ALGO: "OURS"
+DEVICE: "cuda:0"
+ENV_NAME: "AbsEnv-v0"
+seed: 1
+
+# EXP_NAME: "redo-long-${ENV_NAME}-${ALGO}-${PARAM}_nf"
+EXP_NAME: "hydra_test"
+
+
+policy_kwargs:
+  use_sde: True
+
+ours_policy_kwargs:
+  pi_be_ratio: 0
+  pi_b_nf: True
+ablation_mode: False
+
+
+hydra:
+  run:
+    dir: ./runs/${EXP_NAME}

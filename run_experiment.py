@@ -26,6 +26,9 @@ from stable_baselines3.common.callbacks import BaseCallback
 
 import matplotlib.pyplot as plt
 
+import hydra
+from omegaconf import DictConfig, OmegaConf
+
 # print("SKEWING ENV")
 def make_env(env_id, seed):
     def thunk():
@@ -171,14 +174,6 @@ def evaluate(
     return ep_r
 
 results = []
-TOTAL_TIMESTEPS = 200000
-PARAM = 1e-3
-ALGO = sys.argv[2]
-DEVICE = sys.argv[3]
-ENV_NAME = sys.argv[4]
-
-# ENV_NAME = 'GolfEnv-v0'
-EXP_NAME = f'redo-long-{ENV_NAME}-{ALGO}-{PARAM}_nf'
 
 # if ALGO == 'OURS':
 #     EXP_NAME = EXP_NAME + "_nf"
@@ -186,12 +181,13 @@ EXP_NAME = f'redo-long-{ENV_NAME}-{ALGO}-{PARAM}_nf'
 
 
 class evaluateCallback(BaseCallback):
-    def __init__(self, verbose=0):
-        super().__init__(verbose)
+    def __init__(self, cfg):
+        super().__init__()
+        self.cfg = cfg
 
     def _on_step(self):
-        if self.num_timesteps % (TOTAL_TIMESTEPS / 100) == 0:
-            result = evaluate(make_env, ENV_NAME, 1, "ppp", self.model, num_timesteps=self.num_timesteps, device=DEVICE)
+        if self.num_timesteps % (self.cfg.TOTAL_TIMESTEPS / 100) == 0:
+            result = evaluate(make_env, self.cfg.ENV_NAME, 1, "ppp", self.model, num_timesteps=self.num_timesteps, device=self.cfg.DEVICE)
             results.append(result)
 
             if isinstance(result, torch.Tensor):
@@ -203,31 +199,51 @@ class evaluateCallback(BaseCallback):
 
 from stable_baselines3.common.noise import NormalActionNoise
 
-if __name__=="__main__":
+@hydra.main(version_base=None, config_path="conf", config_name="config")
+def main(cfg : DictConfig) -> None:
 
-    seed = sys.argv[1]
 
+    os.makedirs(f'runs/{cfg.EXP_NAME}', exist_ok=True)
+    os.chdir(f'runs/{cfg.EXP_NAME}')
+    os.makedirs(f'gaussian_{cfg.seed}', exist_ok=True)
 
-    os.makedirs(f'runs/{EXP_NAME}', exist_ok=True)
-    os.chdir(f'runs/{EXP_NAME}')
-    os.makedirs(f'gaussian_{seed}', exist_ok=True)
-
-    checkpoint_callback = CheckpointCallback(save_freq=TOTAL_TIMESTEPS//100, save_path='./checkpoints/')
+    checkpoint_callback = CheckpointCallback(save_freq=cfg.TOTAL_TIMESTEPS//100, save_path='./checkpoints/')
     
-    env = make_vec_env(ENV_NAME, n_envs=1, vec_env_cls=SubprocVecEnv)
-    if ALGO == 'TD3':
-        assert PARAM == 0.01, "SET CORRECT PARAM!!!!!\nPLZ!!"
-        model = TD3("MlpPolicy", env, device=DEVICE, action_noise=NormalActionNoise(numpy.zeros(2), numpy.ones(2) / 100), tensorboard_log=f'.', seed=seed)
-    elif ALGO == 'A2C':
-        model = A2C("MlpPolicy", env, device=DEVICE, ent_coef=PARAM, tensorboard_log=f'.')
-    elif ALGO == 'SAC':
-        model = SAC("MlpPolicy", env, device=DEVICE, ent_coef=PARAM, tensorboard_log=f'.', use_sde=True)
-    elif ALGO == 'PPO':
-        model = PPO("MlpPolicy", env, device=DEVICE, ent_coef=PARAM, tensorboard_log=f'.')
-    elif ALGO == 'OURS':
-        model = OURS("MlpPolicy", env, device=DEVICE, ent_coef=PARAM, tensorboard_log=f'.', use_sde=True)
+    env = make_vec_env(cfg.ENV_NAME, n_envs=1, vec_env_cls=SubprocVecEnv)
+    if cfg.ALGO == 'TD3':
+        model = TD3("MlpPolicy", 
+                    env, device=cfg.DEVICE, 
+                    policy_kwargs=cfg.policy_kwargs,
+                    action_noise=NormalActionNoise(numpy.zeros(2), numpy.ones(2) * cfg.PARAM), 
+                    tensorboard_log=f'.', seed=cfg.seed)
+    elif cfg.ALGO == 'A2C':
+        model = A2C("MlpPolicy", 
+                    env, device=cfg.DEVICE, 
+                    policy_kwargs=cfg.policy_kwargs,
+                    ent_coef=cfg.PARAM, 
+                    tensorboard_log=f'.', seed=cfg.seed)
+    elif cfg.ALGO == 'SAC':
+        model = SAC("MlpPolicy", 
+                    env, device=cfg.DEVICE, 
+                    policy_kwargs=cfg.policy_kwargs,
+                    ent_coef=cfg.PARAM, 
+                    tensorboard_log=f'.', seed=cfg.seed)
+    elif cfg.ALGO == 'PPO':
+        model = PPO("MlpPolicy", 
+                    env, device=cfg.DEVICE, 
+                    policy_kwargs=cfg.policy_kwargs,
+                    ent_coef=cfg.PARAM,
+                    tensorboard_log=f'.', seed=cfg.seed)
+    elif cfg.ALGO == 'OURS':
+        policy_kwargs = OmegaConf.merge(OmegaConf.create(OmegaConf.to_container(cfg.policy_kwargs)), cfg.ours_policy_kwargs)
+        model = OURS("MlpPolicy", 
+                    env, device=cfg.DEVICE, 
+                    policy_kwargs=OmegaConf.merge(policy_kwargs, cfg.ours_policy_kwargs), 
+                    ablation_mode=cfg.ablation_mode,
+                    ent_coef=cfg.PARAM, 
+                    tensorboard_log=f'.', seed=cfg.seed)
 
-    model.learn(total_timesteps=TOTAL_TIMESTEPS, callback=[evaluateCallback(), checkpoint_callback])
+    model.learn(total_timesteps=cfg.TOTAL_TIMESTEPS, callback=[evaluateCallback(cfg), checkpoint_callback])
     # results.append(evaluate(make_env, "AbsEnv-v0", 1, "ppp", model, skew=10))
 
     # with open(f'gaussian_{seed}/scalars/charts/eval_return', 'w') as f:
@@ -236,6 +252,10 @@ if __name__=="__main__":
     #         f.write(str(va[0][0]))
     #         f.write('\n')
         
+
+if __name__=="__main__":
+    main()
+
 
 # print(results)
 # print(numpy.mean(results))

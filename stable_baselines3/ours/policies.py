@@ -449,7 +449,7 @@ class OURSPolicy(BasePolicy):
         share_features_extractor: bool = False,
         pi_be_ratio: float = 0,
         pi_b_nf: bool = True,
-        ablation_mode: bool = True
+        ablation_mode: bool = False
     ):
         super().__init__(
             observation_space,
@@ -462,6 +462,8 @@ class OURSPolicy(BasePolicy):
             normalize_images=normalize_images,
         )
         self.ablation_mode = ablation_mode
+        self.pi_be_ratio = pi_be_ratio
+        self.pi_b_nf = pi_b_nf
 
         if net_arch is None:
             net_arch = [256, 256]
@@ -505,12 +507,12 @@ class OURSPolicy(BasePolicy):
         if ablation_mode:
             print("RUNNIGN ABLATION MODE")
             self.pi_be_ratio = 0.0
-        self.pi_be_ratio = pi_be_ratio
-        self.pi_b_nf = pi_b_nf
 
     def _build(self, lr_schedule: Schedule) -> None:
-        # self.actor_b = self.make_actor(nf=True)
-        self.actor_b = self.make_actor()
+        if self.pi_b_nf:
+            self.actor_b = self.make_actor(nf=True)
+        else:
+            self.actor_b = self.make_actor()
         # print(self.actor_b)
         self.actor_b.optimizer = self.optimizer_class(
             self.actor_b.parameters(),

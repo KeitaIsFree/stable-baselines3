@@ -113,7 +113,8 @@ class OURS(OffPolicyAlgorithm):
         verbose: int = 0,
         seed: Optional[int] = None,
         device: Union[th.device, str] = "auto",
-        _init_setup_model: bool = True
+        _init_setup_model: bool = True,
+        ablation_mode: bool = False
     ):
         super().__init__(
             policy,
@@ -151,7 +152,7 @@ class OURS(OffPolicyAlgorithm):
         self.target_update_interval = target_update_interval
         self.ent_coef_optimizer: Optional[th.optim.Adam] = None
 
-        self.ablation_mode = True
+        self.ablation_mode = ablation_mode
 
         if _init_setup_model:
             self._setup_model()
