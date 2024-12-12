@@ -107,6 +107,8 @@ def evaluate(
     # plt.savefig(f'gaussian_{sys.argv[1]}/checkpoint_{num_timesteps}.png')
     # plt.savefig(f'gaussian_{sys.argv[1]}/checkpoint_{num_timesteps}.eps')
 
+    if True:
+        return ep_r
     q_vals = [[], []]
     # action_scale = env.action_space.high[0]
     # ACT_LIM = (-1, )
@@ -169,19 +171,18 @@ def evaluate(
     return ep_r
 
 results = []
-TOTAL_TIMESTEPS = 10000
+TOTAL_TIMESTEPS = 200000
 PARAM = 1e-3
 ALGO = sys.argv[2]
 DEVICE = sys.argv[3]
 ENV_NAME = sys.argv[4]
 
 # ENV_NAME = 'GolfEnv-v0'
-EXP_NAME = f'{ENV_NAME}-{ALGO}-{PARAM}_nf'
+EXP_NAME = f'redo-long-{ENV_NAME}-{ALGO}-{PARAM}_nf'
 
 # if ALGO == 'OURS':
 #     EXP_NAME = EXP_NAME + "_nf"
 
-EXP_NAME = 'test'
 
 
 class evaluateCallback(BaseCallback):

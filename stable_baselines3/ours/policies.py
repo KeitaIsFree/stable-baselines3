@@ -448,7 +448,8 @@ class OURSPolicy(BasePolicy):
         n_critics: int = 2,
         share_features_extractor: bool = False,
         pi_be_ratio: float = 0,
-        pi_b_nf: bool = True
+        pi_b_nf: bool = True,
+        ablation_mode: bool = True
     ):
         super().__init__(
             observation_space,
@@ -460,6 +461,7 @@ class OURSPolicy(BasePolicy):
             squash_output=True,
             normalize_images=normalize_images,
         )
+        self.ablation_mode = ablation_mode
 
         if net_arch is None:
             net_arch = [256, 256]
@@ -499,12 +501,16 @@ class OURSPolicy(BasePolicy):
 
         self.ent_coef_tensor = None
 
+
+        if ablation_mode:
+            print("RUNNIGN ABLATION MODE")
+            self.pi_be_ratio = 0.0
         self.pi_be_ratio = pi_be_ratio
         self.pi_b_nf = pi_b_nf
 
     def _build(self, lr_schedule: Schedule) -> None:
-        self.actor_b = self.make_actor(nf=True)
-        # self.actor_b = self.make_actor()
+        # self.actor_b = self.make_actor(nf=True)
+        self.actor_b = self.make_actor()
         # print(self.actor_b)
         self.actor_b.optimizer = self.optimizer_class(
             self.actor_b.parameters(),
@@ -512,13 +518,14 @@ class OURSPolicy(BasePolicy):
             **self.optimizer_kwargs,
         )
 
-        self.actor_e = self.make_actor()
-        # print(self.actor_e)
-        self.actor_e.optimizer = self.optimizer_class(
-            self.actor_e.parameters(),
-            lr=lr_schedule(1),  # type: ignore[call-arg]
-            **self.optimizer_kwargs,
-        )
+        if not self.ablation_mode:
+            self.actor_e = self.make_actor()
+            # print(self.actor_e)
+            self.actor_e.optimizer = self.optimizer_class(
+                self.actor_e.parameters(),
+                lr=lr_schedule(1),  # type: ignore[call-arg]
+                **self.optimizer_kwargs,
+            )
 
         if self.share_features_extractor:
             self.critic = self.make_critic(features_extractor=self.actor_e.features_extractor)
@@ -588,6 +595,8 @@ class OURSPolicy(BasePolicy):
         return self._predict(obs, deterministic=deterministic)
 
     def _predict(self, observation: PyTorchObs, deterministic: bool = False) -> th.Tensor:
+        if self.ablation_mode:
+            return self.actor_b._predict(observation, deterministic)
         if not deterministic and numpy.random.rand() > self.pi_be_ratio:
             return self.actor_b._predict(observation)
         else:
@@ -602,7 +611,8 @@ class OURSPolicy(BasePolicy):
         :param mode: if true, set to training mode, else set to evaluation mode
         """
         self.actor_b.set_training_mode(mode)
-        self.actor_e.set_training_mode(mode)
+        if hasattr(self, 'actor_e'):
+            self.actor_e.set_training_mode(mode)
         self.critic.set_training_mode(mode)
         self.training = mode
 

@@ -113,7 +113,7 @@ class OURS(OffPolicyAlgorithm):
         verbose: int = 0,
         seed: Optional[int] = None,
         device: Union[th.device, str] = "auto",
-        _init_setup_model: bool = True,
+        _init_setup_model: bool = True
     ):
         super().__init__(
             policy,
@@ -151,8 +151,11 @@ class OURS(OffPolicyAlgorithm):
         self.target_update_interval = target_update_interval
         self.ent_coef_optimizer: Optional[th.optim.Adam] = None
 
+        self.ablation_mode = True
+
         if _init_setup_model:
             self._setup_model()
+
 
     def _setup_model(self) -> None:
         super()._setup_model()
@@ -164,7 +167,8 @@ class OURS(OffPolicyAlgorithm):
     def _create_aliases(self) -> None:
         self.actor_b = self.policy.actor_b
         self.actor = self.policy.actor_b
-        self.actor_e = self.policy.actor_e
+        if not self.ablation_mode:
+            self.actor_e = self.policy.actor_e
         self.critic = self.policy.critic
         self.critic_target = self.policy.critic_target
 
@@ -172,7 +176,10 @@ class OURS(OffPolicyAlgorithm):
         # Switch to train mode (this affects batch norm / dropout)
         self.policy.set_training_mode(True)
         # Update optimizers learning rate
-        optimizers = [self.actor_b.optimizer, self.actor_e.optimizer, self.critic.optimizer]
+        if hasattr(self, 'actor_e'):
+            optimizers = [self.actor_b.optimizer, self.actor_e.optimizer, self.critic.optimizer]
+        else:
+            optimizers = [self.actor_b.optimizer, self.critic.optimizer]
 
         # Update learning rate according to lr schedule
         self._update_learning_rate(optimizers)
@@ -201,7 +208,10 @@ class OURS(OffPolicyAlgorithm):
             with th.no_grad():
                 # Select action according to policy
                 obs_cpy = replay_data.next_observations.clone().detach()
-                next_actions = self.actor_e.predict(obs_cpy.cpu(), deterministic=True)[0]
+                if self.ablation_mode:
+                    next_actions = self.actor_b.predict(obs_cpy.cpu(), deterministic=True)[0]
+                else:
+                    next_actions = self.actor_e.predict(obs_cpy.cpu(), deterministic=True)[0]
                 # Compute the next Q values: min over all critics targets
                 next_q_values = th.cat(self.critic_target(replay_data.next_observations, th.tensor(next_actions, device=self.device)), dim=1)
                 next_q_values, _ = th.min(next_q_values, dim=1, keepdim=True)
@@ -246,16 +256,17 @@ class OURS(OffPolicyAlgorithm):
             # actions_e_pi = th.tanh(actions_e_pi)
             
             # actions_e_pi = self.actor_e.predict(obs_cp, deterministic=True, wgrad=True)[0]
-            actions_e_pi, _ = self.actor_e.action_log_prob(replay_data.observations, deterministic=True)
-            q_values_pi = th.cat(self.critic(replay_data.observations, actions_e_pi), dim=1)
-            min_qf_pi, _ = th.min(q_values_pi, dim=1, keepdim=True)
-            actor_e_loss = (- min_qf_pi).mean()
-            actor_e_losses.append(actor_e_loss.item())
+            if not self.ablation_mode:
+                actions_e_pi, _ = self.actor_e.action_log_prob(replay_data.observations, deterministic=True)
+                q_values_pi = th.cat(self.critic(replay_data.observations, actions_e_pi), dim=1)
+                min_qf_pi, _ = th.min(q_values_pi, dim=1, keepdim=True)
+                actor_e_loss = (- min_qf_pi).mean()
+                actor_e_losses.append(actor_e_loss.item())
 
-            # Optimize the actor
-            self.actor_e.optimizer.zero_grad()
-            actor_e_loss.backward()
-            self.actor_e.optimizer.step()
+                # Optimize the actor
+                self.actor_e.optimizer.zero_grad()
+                actor_e_loss.backward()
+                self.actor_e.optimizer.step()
 
             # Update target networks
             if gradient_step % self.target_update_interval == 0:
