@@ -237,22 +237,25 @@ class OURS(OffPolicyAlgorithm):
             # Compute actor loss
             # Alternative: actor_loss = th.mean(log_prob - qf1_pi)
             # Min over all critic networks
-            q_values_pi = th.cat(self.critic(replay_data.observations, actions_pi), dim=1)
+            q_values_pi = th.cat(self.critic(replay_data.observations, actions_pi), dim=1).detach()
+            adv = q_values_pi - q_values_pi.mean()
+            actor_b_loss = (ent_coef * log_prob - adv * log_prob).mean()
             # min_qf_pi, _ = th.min(q_values_pi, dim=1, keepdim=True)
             # actor_b_loss = (ent_coef * log_prob - min_qf_pi).mean()
-            actor_b_loss = (ent_coef * log_prob - q_values_pi).mean()
-            actor_b_losses.append(actor_b_loss.item())
 
-            print(actor_b_loss)
+            # original
+            # q_values_pi = th.cat(self.critic(replay_data.observations, actions_pi), dim=1)
+            # actor_b_loss = (ent_coef * log_prob - q_values_pi).mean()
+            actor_b_losses.append(actor_b_loss.item())
 
             # Optimize the actor
             self.actor_b.optimizer.zero_grad()
             actor_b_loss.backward()
-            for name, param in self.actor_b.named_parameters():
-                if param.grad is not None:
-                    print(f"Gradient of {name}: {param.grad}")
-                else:
-                    print(f"Gradient of {name} is None")
+            # for name, param in self.actor_b.named_parameters():
+            #     if param.grad is not None:
+            #         print(f"Gradient of {name}: {param.grad}")
+            #     else:
+            #         print(f"Gradient of {name} is None")
             self.actor_b.optimizer.step()
 
 

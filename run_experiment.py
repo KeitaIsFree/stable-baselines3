@@ -4,6 +4,8 @@ from stable_baselines3 import A2C, TD3, SAC, OURS, PPO
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import SubprocVecEnv
 from stable_baselines3.common.callbacks import CheckpointCallback
+from stable_baselines3.common.distributions import StateDependentNoiseDistribution
+
 
 import numpy
 
@@ -52,7 +54,8 @@ def evaluate(
     device: torch.device = torch.device("cpu"),
     capture_video: bool = False,
     skew: float = 1,
-    num_timesteps: int = 0
+    num_timesteps: int = 0,
+    cfg = None
 ):
     ########
     # ignoring eval_episodes, only doing one
@@ -110,13 +113,13 @@ def evaluate(
     # plt.savefig(f'gaussian_{sys.argv[1]}/checkpoint_{num_timesteps}.png')
     # plt.savefig(f'gaussian_{sys.argv[1]}/checkpoint_{num_timesteps}.eps')
 
-    if True:
-        return ep_r
+    # if True:
+    #     return ep_r
     q_vals = [[], []]
     # action_scale = env.action_space.high[0]
     # ACT_LIM = (-1, )
     # action_scale = 3.0
-    if ALGO == 'A2C' or ALGO == 'PPO':
+    if cfg.ALGO == 'A2C' or cfg.ALGO == 'PPO':
         return ep_r
     maxes = [-100, -100]
     argmaxes = [None, None]
@@ -155,6 +158,17 @@ def evaluate(
     y = numpy.linspace(-1, 1, 100)
     X, Y = numpy.meshgrid(x,y)
 
+    pi_b_acts = []
+    for i in range(1000):
+        # print('Sampling actions')
+        ac = actor.actor_b.predict(numpy.zeros((1,1), dtype=numpy.float32))[0]
+        # print(ac)
+        try:
+            actor.actor_b.reset_noise()
+        except:
+            pass
+        pi_b_acts.append(numpy.clip(ac, a_min=-1, a_max=1)[0])
+
     for i in range(len(temp)):
         plt.clf()
         # plt.contour(X, Y, pi_p)
@@ -169,7 +183,7 @@ def evaluate(
         plt.title('Heatmap')
         plt.xlabel('X-axis')
         plt.ylabel('Y-axis')
-        plt.savefig(f'gaussian_{seed}/{num_timesteps}_q{i}.pdf')
+        plt.savefig(f'gaussian_{cfg.seed}/{num_timesteps}_q{i}.pdf')
 
 
 
@@ -189,7 +203,7 @@ class evaluateCallback(BaseCallback):
 
     def _on_step(self):
         if self.num_timesteps % (self.cfg.TOTAL_TIMESTEPS / 100) == 0:
-            result = evaluate(make_env, self.cfg.ENV_NAME, 1, "ppp", self.model, num_timesteps=self.num_timesteps, device=self.cfg.DEVICE)
+            result = evaluate(make_env, self.cfg.ENV_NAME, 1, "ppp", self.model, num_timesteps=self.num_timesteps, device=self.cfg.DEVICE, cfg=self.cfg)
             results.append(result)
 
             if isinstance(result, torch.Tensor):
