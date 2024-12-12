@@ -129,8 +129,8 @@ def evaluate(
             temp = actor.critic(torch.full((100, 1), 0.0, dtype=torch.float32).to(device), dummy)
         else:
             temp = [actor.policy.evaluate_actions(torch.full((100, 1), 0.0, dtype=torch.float32).to(device), dummy)[0]]
-        probs = actor.actor_b.get_log_prob_from_act(torch.full((100, 1), 0.0, dtype=torch.float32).to(device), dummy).tolist()
-        pi_p.append(probs)
+        # probs = actor.actor_b.get_log_prob_from_act(torch.full((100, 1), 0.0, dtype=torch.float32).to(device), dummy).tolist()
+        # pi_p.append(probs)
         if len(temp) > 1:
             q_0_vals = temp[0].squeeze(1).tolist()
             q_vals[0].append(q_0_vals)
@@ -157,8 +157,10 @@ def evaluate(
 
     for i in range(len(temp)):
         plt.clf()
-        plt.contour(X, Y, pi_p)
+        # plt.contour(X, Y, pi_p)
         plt.imshow(q_vals[i], cmap='viridis', aspect='auto', extent=[-1, 1, -1, 1])
+        for ac in pi_b_acts:
+            plt.plot(ac[0], ac[1], markersize=10, marker='x', c='black', alpha=0.5)
         plt.plot(action[0], action[1], markersize=10, marker='x', c='r')
         plt.text(action[0], action[1], 'pi_e')
         plt.plot(argmaxes[i][0], argmaxes[i][1], markersize=10, marker='x', c='g')

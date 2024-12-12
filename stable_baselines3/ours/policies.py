@@ -79,18 +79,23 @@ class NFActor(BasePolicy):
         self.full_std = full_std
         self.clip_mean = clip_mean
 
-        # 決め打ち
-        self.state_embedding_layer_sizes= (64, 64)
-        self.flow_mlp_sizes=(10,10)
-        self.nf_num_flows=2
-
         action_dim = get_action_dim(self.action_space)
         self.act_dim = action_dim
 
+        # 決め打ち
+        self.state_embedding_layer_sizes= (64, 64)
+        self.state_embedding_dim=action_dim
+        # IGNORING EMBEDDING
+        self.state_embedding_dim=1
+        self.flow_mlp_sizes=(16,16)
+        self.nf_num_flows=2
+        # LOW NF SIZE!!!
+
+
         nfs = []
         z_size = action_dim
-        latent_size = z_size + self.state_embedding_layer_sizes[0]
-        masks = self.generate_random_masks(z_size, self.nf_num_flows, state_dim=self.state_embedding_layer_sizes[-1])
+        latent_size = z_size + self.state_embedding_dim
+        masks = self.generate_random_masks(z_size, self.nf_num_flows, state_dim=self.state_embedding_dim)
         for i in range(self.nf_num_flows):
             s = normflows.nets.MLP([latent_size, *self.flow_mlp_sizes, latent_size], output_fn="sigmoid", init_zeros=True)
             t = normflows.nets.MLP([latent_size, *self.flow_mlp_sizes, latent_size], output_fn="sigmoid", init_zeros=True)
@@ -99,9 +104,11 @@ class NFActor(BasePolicy):
         self.nfs = nn.ModuleList(nfs)
 
         s_em = []
-        for layer_i in range(len(self.state_embedding_layer_sizes)):
+        for layer_i in range(len(self.state_embedding_layer_sizes) + 1):
             if layer_i == 0:
                 s_em.append(nn.Linear(observation_space.shape[0], self.state_embedding_layer_sizes[layer_i]))
+            if layer_i == len(self.state_embedding_layer_sizes):
+                s_em.append(nn.Linear(self.state_embedding_layer_sizes[layer_i - 1], self.state_embedding_dim))
             else:
                 s_em.append(nn.Linear(self.state_embedding_layer_sizes[layer_i - 1], self.state_embedding_layer_sizes[layer_i]))
         self.state_embedding = nn.ModuleList(s_em)
@@ -171,6 +178,10 @@ class NFActor(BasePolicy):
         for s_em_i in range(len(self.state_embedding) - 1):
             x_ = F.relu(self.state_embedding[s_em_i](x_))
         x_ = self.state_embedding[-1](x_)
+
+        # IGNORING EMBEDDING
+        x_ = x
+
         x_t = th.cat((x_t.to(self.device), x_), dim=1)
         for nf_i in range(self.nf_num_flows):
             # print(x_t)
@@ -179,30 +190,83 @@ class NFActor(BasePolicy):
             # log_dets = th.add(log_dets, ld_, alpha=-1.0)
             log_dets = log_dets - ld_
         x_t = x_t[:, :self.act_dim]
+
+        # print('before tanh: ', x_t)
+        log_dets += th.sum(2 * th.log(th.cosh(x_t)), 1)
+        x_t = th.tanh(x_t)
+        # print('after tanh: ', x_t)
+        # print(log_dets)
+        
         return x_t, log_dets
     
+    # def get_log_prob_from_act(self, s, a):
+    #     s_ = s
+    #     s_.to(self.device)
+    #     a.to(self.device)
+    #     for s_em_i in range(len(self.state_embedding) - 1):
+    #         s_ = F.relu(self.state_embedding[s_em_i](s_))
+    #     s_ = self.state_embedding[-1](s_)
+    #     x_t = th.cat((a, s_), dim=1)
+    #     # print(x_t)
+    #     x_t_ = x_t.detach().clone()
+
+    #     log_det = th.zeros(len(x_t), device=self.device)
+    #     for i in range(len(self.nfs) - 1, -1, -1):
+    #         x_t, log_d = self.nfs[i].inverse(x_t)
+    #         # print(x_t)
+    #         # print(log_d)
+    #         log_det += log_d
+
+    #     normal = th.distributions.Normal(th.zeros((self.act_dim,), device=self.device), th.ones((self.act_dim,), device=self.device))
+
+    #     z_prob = normal.log_prob(x_t[:,:self.act_dim])
+    #     log_det += z_prob.sum(dim=1)
+
+    #     # print(self.nfs[0](th.ones((4,), device=self.device)))
+    #     # print(self.nfs[0])
+
+    #     # log_det = th.zeros(len(x_t), device=self.device)
+
+    #     # for i in range(len(self.nfs)):
+    #     #     x_t, log_d = self.nfs[i](x_t)
+    #     #     log_det -= log_d
+
+    #     # log_dets = []
+    #     # for i in range(len(s)):
+    #     #     log_det = th.zeros(1, device=self.device)
+    #     #     x_t_ = x_t[i]
+    #     #     for i in range(len(self.nfs)):
+    #     #         x_t_, log_d = self.nfs[-i].inverse(x_t_)
+    #     #         print(x_t_)
+    #     #         print(log_d)
+    #     #         log_det += log_d
+    #     #     log_dets.append(log_det)
+    #     return log_det
+
     def get_log_prob_from_act(self, s, a):
+
+        a = th.atanh(a)
+        log_det = th.sum(2 * th.log(th.cosh(a)), 1)
+
         s_ = s
         s_.to(self.device)
         a.to(self.device)
         for s_em_i in range(len(self.state_embedding) - 1):
             s_ = F.relu(self.state_embedding[s_em_i](s_))
         s_ = self.state_embedding[-1](s_)
+
+
+        # IGNORING EMBEDDING
+        s_ = s
         x_t = th.cat((a, s_), dim=1)
         # print(x_t)
         x_t_ = x_t.detach().clone()
 
-        log_det = th.zeros(len(x_t), device=self.device)
         for i in range(len(self.nfs) - 1, -1, -1):
             x_t, log_d = self.nfs[i].inverse(x_t)
             # print(x_t)
             # print(log_d)
             log_det += log_d
-
-        normal = th.distributions.Normal(th.zeros((self.act_dim,), device=self.device), th.ones((self.act_dim,), device=self.device))
-
-        z_prob = normal.log_prob(x_t[:,:self.act_dim])
-        log_det += z_prob.sum(dim=1)
 
         # print(self.nfs[0](th.ones((4,), device=self.device)))
         # print(self.nfs[0])
@@ -271,7 +335,7 @@ class Actor(BasePolicy):
         features_extractor: nn.Module,
         features_dim: int,
         activation_fn: Type[nn.Module] = nn.ReLU,
-        use_sde: bool = False,
+        use_sde: bool = True,
         log_std_init: float = -3,
         full_std: bool = True,
         use_expln: bool = False,
@@ -379,6 +443,9 @@ class Actor(BasePolicy):
         # Original Implementation to cap the standard deviation
         log_std = th.clamp(log_std, LOG_STD_MIN, LOG_STD_MAX)
         return mean_actions, log_std, {}
+    
+    def get_log_prob_from_act(self, s, a):
+        return None
 
     def forward(self, obs: PyTorchObs, deterministic: bool = False) -> th.Tensor:
         mean_actions, log_std, kwargs = self.get_action_dist_params(obs)
@@ -436,7 +503,7 @@ class OURSPolicy(BasePolicy):
         lr_schedule: Schedule,
         net_arch: Optional[Union[List[int], Dict[str, List[int]]]] = None,
         activation_fn: Type[nn.Module] = nn.ReLU,
-        use_sde: bool = False,
+        use_sde: bool = True,
         log_std_init: float = -3,
         use_expln: bool = False,
         clip_mean: float = 2.0,
@@ -519,6 +586,8 @@ class OURSPolicy(BasePolicy):
             lr=lr_schedule(1),  # type: ignore[call-arg]
             **self.optimizer_kwargs,
         )
+        
+        print(self.actor_b)
 
         if not self.ablation_mode:
             self.actor_e = self.make_actor()
