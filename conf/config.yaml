@@ -1,12 +1,11 @@
-TOTAL_TIMESTEPS: 10000
-PARAM: 1
+TOTAL_TIMESTEPS: 500000
+PARAM: 100.0
 ALGO: "OURS"
 DEVICE: "cuda:2"
-ENV_NAME: "AbsEnv-v0"
+ENV_NAME: "BipedalWalker-v3"
 seed: 1
 
-# EXP_NAME: "redo-long-${ENV_NAME}-${ALGO}-${PARAM}_nf"
-EXP_NAME: "neural_spline_1_test"
+EXP_NAME: "thesis/${ENV_NAME}-${ALGO}-${PARAM}_nf"
 
 
 policy_kwargs:

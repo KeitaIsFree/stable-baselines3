@@ -1,6 +1,6 @@
 
 
-ENV_NAME="AbsEnv-v0"
+
 
 SEEDS=(1 2 3 4 5 6 7 8 9 10)
 
@@ -13,7 +13,8 @@ SEEDS=(1 2 3 4 5 6 7 8 9 10)
 # done
 
 for SEED in ${SEEDS[@]}; do
-    python 'run_experiment.py' $SEED "A2C" "cuda:0" $ENV_NAME &
+    # python 'run_experiment.py' $SEED "A2C" "cuda:0" $ENV_NAME &
+    python 'run_experiment.py' seed=$SEED &
 done
 
 # wait 

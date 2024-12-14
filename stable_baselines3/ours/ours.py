@@ -233,19 +233,31 @@ class OURS(OffPolicyAlgorithm):
             critic_loss.backward()
             self.critic.optimizer.step()
 
+            # actions_e_pi = self.actor_e.predict(obs_cp, deterministic=True, wgrad=True)[0]
+            if not self.ablation_mode:
+                actions_e_pi, _ = self.actor_e.action_log_prob(replay_data.observations, deterministic=True)
+                # actions_e_pi = self.actor_e.predict(replay_data.observations, deterministic=True, wgrad=True)[0]
+                q_values_pi = th.cat(self.critic(replay_data.observations, actions_e_pi), dim=1)
+                min_qf_pi, _ = th.min(q_values_pi, dim=1, keepdim=True)
+                actor_e_loss = (- min_qf_pi).mean()
+                actor_e_losses.append(actor_e_loss.item())
+
+                # Optimize the actor
+                self.actor_e.optimizer.zero_grad()
+                actor_e_loss.backward()
+                self.actor_e.optimizer.step()
 
             # Compute actor loss
-            # Alternative: actor_loss = th.mean(log_prob - qf1_pi)
-            # Min over all critic networks
-            q_values_pi = th.cat(self.critic(replay_data.observations, actions_pi), dim=1).detach()
-            adv = q_values_pi - q_values_pi.mean()
-            actor_b_loss = (ent_coef * log_prob - adv * log_prob).mean()
+            # q_values_pi = th.cat(self.critic(replay_data.observations, actions_pi), dim=1).detach()
+            # adv = q_values_pi - q_values_pi.mean()
+            # actor_b_loss = (ent_coef * log_prob - adv * log_prob).mean()
+
             # min_qf_pi, _ = th.min(q_values_pi, dim=1, keepdim=True)
             # actor_b_loss = (ent_coef * log_prob - min_qf_pi).mean()
 
             # original
-            # q_values_pi = th.cat(self.critic(replay_data.observations, actions_pi), dim=1)
-            # actor_b_loss = (ent_coef * log_prob - q_values_pi).mean()
+            q_values_pi = th.cat(self.critic(replay_data.observations, actions_pi), dim=1)
+            actor_b_loss = (ent_coef * log_prob - q_values_pi).mean()
             actor_b_losses.append(actor_b_loss.item())
 
             # Optimize the actor
@@ -266,19 +278,6 @@ class OURS(OffPolicyAlgorithm):
             # actions_e_pi = self.actor_e(replay_data.observations, deterministic=True)
             # print(actions_e_pi)
             # actions_e_pi = th.tanh(actions_e_pi)
-            
-            # actions_e_pi = self.actor_e.predict(obs_cp, deterministic=True, wgrad=True)[0]
-            if not self.ablation_mode:
-                actions_e_pi, _ = self.actor_e.action_log_prob(replay_data.observations, deterministic=True)
-                q_values_pi = th.cat(self.critic(replay_data.observations, actions_e_pi), dim=1)
-                min_qf_pi, _ = th.min(q_values_pi, dim=1, keepdim=True)
-                actor_e_loss = (- min_qf_pi).mean()
-                actor_e_losses.append(actor_e_loss.item())
-
-                # Optimize the actor
-                self.actor_e.optimizer.zero_grad()
-                actor_e_loss.backward()
-                self.actor_e.optimizer.step()
 
             # Update target networks
             if gradient_step % self.target_update_interval == 0:

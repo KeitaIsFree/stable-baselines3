@@ -7,7 +7,7 @@ import torch.nn.functional as F
 
 from stable_baselines3.common.distributions import SquashedDiagGaussianDistribution, StateDependentNoiseDistribution
 from stable_baselines3.common.policies import BasePolicy, ContinuousCritic
-from stable_baselines3.common.preprocessing import get_action_dim
+from stable_baselines3.common.preprocessing import get_action_dim, get_obs_shape
 from stable_baselines3.common.torch_layers import (
     BaseFeaturesExtractor,
     CombinedExtractor,
@@ -87,8 +87,9 @@ class NFActor(BasePolicy):
         self.state_embedding_layer_sizes= (64, 64)
         self.state_embedding_dim=action_dim
         # IGNORING EMBEDDING
-        self.state_embedding_dim=1
-        self.flow_mlp_sizes=(16,16)
+        obs_dim = get_obs_shape(observation_space)[0]
+        # self.state_embedding_dim=obs_dim
+        # self.flow_mlp_sizes=(16,16)
         self.nf_num_flows=8
         self.flow_type = flow_type
 
@@ -108,11 +109,13 @@ class NFActor(BasePolicy):
         nfs = []
         for i in range(self.nf_num_flows):
             nfs += [normflows.flows.CoupledRationalQuadraticSpline(action_dim, hidden_layers, hidden_units, 
-                                                      num_context_channels=self.state_embedding_dim)]
+                                                      num_context_channels=obs_dim)]
             nfs += [normflows.flows.LULinearPermute(action_dim)]
         # for i in range(self.nf_num_flows):
         #     nfs += [normflows.flows.Planar((2,))]
-        self.nfs = nn.ModuleList(nfs)
+        q0 = normflows.distributions.DiagGaussian(action_dim, trainable=False)
+        model = normflows.ConditionalNormalizingFlow(q0, nfs)
+        self.model = model
 
         # s_em = []
         # for layer_i in range(len(self.state_embedding_layer_sizes) + 1):
@@ -178,35 +181,36 @@ class NFActor(BasePolicy):
         pass
 
     def forward(self, x: PyTorchObs, deterministic: bool = False) -> th.Tensor:
-        mean = None
-        normal = th.distributions.Normal(th.FloatTensor([[0] * self.act_dim] * len(x)), th.FloatTensor([[1] * self.act_dim] * len(x)))
-        x_t = normal.rsample()
+        x_t, log_dets = self.model.sample(len(x), context=x)
+        # mean = None
+        # normal = th.distributions.Normal(th.FloatTensor([[0] * self.act_dim] * len(x)), th.FloatTensor([[1] * self.act_dim] * len(x)))
+        # x_t = normal.rsample()
 
-        log_dets = normal.log_prob(x_t)
-        log_dets = th.sum(log_dets, 1).to(self.device)
+        # log_dets = normal.log_prob(x_t)
+        # log_dets = th.sum(log_dets, 1).to(self.device)
     
+        # # x_ = x
+        # # for s_em_i in range(len(self.state_embedding) - 1):
+        # #     x_ = F.relu(self.state_embedding[s_em_i](x_))
+        # # x_ = self.state_embedding[-1](x_)
+
+        # # IGNORING EMBEDDING
         # x_ = x
-        # for s_em_i in range(len(self.state_embedding) - 1):
-        #     x_ = F.relu(self.state_embedding[s_em_i](x_))
-        # x_ = self.state_embedding[-1](x_)
 
-        # IGNORING EMBEDDING
-        x_ = x
+        # # x_t = th.cat((x_t.to(self.device), x_), dim=1)
+        # x_t = x_t.to(self.device)
+        # assert self.flow_type == 'NeuralSpline'
+        # for nf_i in range(self.nf_num_flows // 2):
+        #     x_t, ld_ = self.nfs[nf_i * 2](x_t, context=x_)
+        #     log_dets = log_dets - ld_
+        #     x_t, ld_ = self.nfs[nf_i * 2 + 1](x_t)
+        #     log_dets = log_dets - ld_
 
-        # x_t = th.cat((x_t.to(self.device), x_), dim=1)
-        x_t = x_t.to(self.device)
-        assert self.flow_type == 'NeuralSpline'
-        for nf_i in range(self.nf_num_flows // 2):
-            x_t, ld_ = self.nfs[nf_i * 2](x_t, context=x_)
-            log_dets = log_dets - ld_
-            x_t, ld_ = self.nfs[nf_i * 2 + 1](x_t)
-            log_dets = log_dets - ld_
+        # assert self.flow_type == 'NeuralSpline'
+        # # x_t = x_t[:, :self.act_dim]
 
-        assert self.flow_type == 'NeuralSpline'
-        # x_t = x_t[:, :self.act_dim]
-
-        # print('before tanh: ', x_t)
-        # log_dets += th.sum(2 * th.log(th.cosh(x_t)), 1)
+        # # print('before tanh: ', x_t)
+        # # log_dets += th.sum(2 * th.log(th.cosh(x_t)), 1)
         x_t = th.tanh(x_t)
         log_dets -= th.sum(th.log(1 - x_t ** 2), 1)
         # print('after tanh: ', x_t)
@@ -215,49 +219,9 @@ class NFActor(BasePolicy):
         return x_t, log_dets
 
     def get_log_prob_from_act(self, s, a):
-
-        a = th.atanh(a)
-        log_det = th.sum(2 * th.log(th.cosh(a)), 1)
-
-        s_ = s
-        s_.to(self.device)
-        a.to(self.device)
-        for s_em_i in range(len(self.state_embedding) - 1):
-            s_ = F.relu(self.state_embedding[s_em_i](s_))
-        s_ = self.state_embedding[-1](s_)
-
-
-        # IGNORING EMBEDDING
-        s_ = s
-        x_t = th.cat((a, s_), dim=1)
-        # print(x_t)
-        x_t_ = x_t.detach().clone()
-
-        for i in range(len(self.nfs) - 1, -1, -1):
-            x_t, log_d = self.nfs[i].inverse(x_t)
-            # print(x_t)
-            # print(log_d)
-            log_det += log_d
-
-        # print(self.nfs[0](th.ones((4,), device=self.device)))
-        # print(self.nfs[0])
-
-        # log_det = th.zeros(len(x_t), device=self.device)
-
-        # for i in range(len(self.nfs)):
-        #     x_t, log_d = self.nfs[i](x_t)
-        #     log_det -= log_d
-
-        # log_dets = []
-        # for i in range(len(s)):
-        #     log_det = th.zeros(1, device=self.device)
-        #     x_t_ = x_t[i]
-        #     for i in range(len(self.nfs)):
-        #         x_t_, log_d = self.nfs[-i].inverse(x_t_)
-        #         print(x_t_)
-        #         print(log_d)
-        #         log_det += log_d
-        #     log_dets.append(log_det)
+        a_ = th.atanh(a)
+        log_det = self.model.log_prob(a_, context=s).to('cpu')
+        log_det += th.sum(2 * th.log(th.cosh(a_)), 1).to('cpu')
         return log_det
 
     def action_log_prob(self, obs: PyTorchObs) -> Tuple[th.Tensor, th.Tensor]:
@@ -416,7 +380,14 @@ class Actor(BasePolicy):
         return mean_actions, log_std, {}
     
     def get_log_prob_from_act(self, s, a):
-        return None
+        mean, log_std, _ = self.get_action_dist_params(s)
+        dist = th.distributions.Normal(mean, th.exp(log_std))
+        # x_t = normal.rsample()
+        a_ = th.atanh(a)
+
+        log_probs = th.sum(dist.log_prob(a_), 1).to('cpu')
+        log_probs += th.sum(2 * th.log(th.cosh(a_)), 1).to('cpu')
+        return log_probs
 
     def forward(self, obs: PyTorchObs, deterministic: bool = False) -> th.Tensor:
         mean_actions, log_std, kwargs = self.get_action_dist_params(obs)

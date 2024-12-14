@@ -101,6 +101,7 @@ def evaluate(
             break
     
 
+    return ep_r
     # plt.clf()
     # for i in range(1, len(pos_log)):
     #     marker = 'X' if ob_log[i] else 'o'
@@ -132,8 +133,8 @@ def evaluate(
             temp = actor.critic(torch.full((100, 1), 0.0, dtype=torch.float32).to(device), dummy)
         else:
             temp = [actor.policy.evaluate_actions(torch.full((100, 1), 0.0, dtype=torch.float32).to(device), dummy)[0]]
-        # probs = actor.actor_b.get_log_prob_from_act(torch.full((100, 1), 0.0, dtype=torch.float32).to(device), dummy).tolist()
-        # pi_p.append(probs)
+        probs = actor.actor_b.get_log_prob_from_act(torch.full((100, 1), 0.0, dtype=torch.float32).to(device), dummy).tolist()
+        pi_p.append(probs)
         if len(temp) > 1:
             q_0_vals = temp[0].squeeze(1).tolist()
             q_vals[0].append(q_0_vals)
@@ -155,26 +156,26 @@ def evaluate(
                 maxes[1] = max_in_row
 
     x = numpy.linspace(-1, 1, 100)  # 100 points from -5 to 5
-    y = numpy.linspace(-1, 1, 100)
+    y = numpy.linspace(1, -1, 100)
     X, Y = numpy.meshgrid(x,y)
 
-    pi_b_acts = []
-    for i in range(1000):
-        # print('Sampling actions')
-        ac = actor.actor_b.predict(numpy.zeros((1,1), dtype=numpy.float32))[0]
-        # print(ac)
-        try:
-            actor.actor_b.reset_noise()
-        except:
-            pass
-        pi_b_acts.append(numpy.clip(ac, a_min=-1, a_max=1)[0])
+    # pi_b_acts = []
+    # for i in range(1000):
+    #     # print('Sampling actions')
+    #     ac = actor.actor_b.predict(numpy.zeros((1,1), dtype=numpy.float32))[0]
+    #     # print(ac)
+    #     try:
+    #         actor.actor_b.reset_noise()
+    #     except:
+    #         pass
+    #     pi_b_acts.append(numpy.clip(ac, a_min=-1, a_max=1)[0])
 
     for i in range(len(temp)):
         plt.clf()
-        # plt.contour(X, Y, pi_p)
+        plt.contour(X, Y, pi_p, cmap=plt.cm.bone)
         plt.imshow(q_vals[i], cmap='viridis', aspect='auto', extent=[-1, 1, -1, 1])
-        for ac in pi_b_acts:
-            plt.plot(ac[0], ac[1], markersize=10, marker='x', c='black', alpha=0.5)
+        # for ac in pi_b_acts:
+        #     plt.plot(ac[0], ac[1], markersize=10, marker='x', c='black', alpha=0.5)
         plt.plot(action[0], action[1], markersize=10, marker='x', c='r')
         plt.text(action[0], action[1], 'pi_e')
         plt.plot(argmaxes[i][0], argmaxes[i][1], markersize=10, marker='x', c='g')
