@@ -5,7 +5,7 @@ DEVICE: "cuda:1"
 ENV_NAME: "BipedalWalker-v3"
 seed: 1
 
-EXP_NAME: "thesis/${ENV_NAME}-${ALGO}-pibe0.4-${PARAM}_nf"
+EXP_NAME: "thesis/${ENV_NAME}-${ALGO}-pibe0.2-${PARAM}_nf"
 
 
 policy_kwargs:
