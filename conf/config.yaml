@@ -1,11 +1,11 @@
 TOTAL_TIMESTEPS: 500000
-PARAM: 0.1
+PARAM: 0.01
 ALGO: "OURS"
-DEVICE: "cuda:2"
+DEVICE: "cuda:1"
 ENV_NAME: "BipedalWalker-v3"
 seed: 1
 
-EXP_NAME: "thesis/${ENV_NAME}-${ALGO}-adv-${PARAM}_nf"
+EXP_NAME: "thesis/${ENV_NAME}-${ALGO}-pibe0.4-${PARAM}_nf"
 
 
 policy_kwargs:
@@ -13,7 +13,7 @@ policy_kwargs:
 
 ours_policy_kwargs:
   use_sde: False
-  pi_be_ratio: 0
+  pi_be_ratio: 0.2
   pi_b_nf: True
 ablation_mode: False
 

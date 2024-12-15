@@ -248,16 +248,16 @@ class OURS(OffPolicyAlgorithm):
                 self.actor_e.optimizer.step()
 
             # Compute actor loss
-            q_values_pi_b = th.cat(self.critic(replay_data.observations, actions_pi), dim=1).detach()
-            adv = q_values_pi_b - q_values_pi.detach()
-            actor_b_loss = (ent_coef * log_prob - adv * log_prob).mean()
+            # q_values_pi_b = th.cat(self.critic(replay_data.observations, actions_pi), dim=1).detach()
+            # adv = q_values_pi_b - q_values_pi.detach()
+            # actor_b_loss = (ent_coef * log_prob - adv * log_prob).mean()
 
             # min_qf_pi, _ = th.min(q_values_pi, dim=1, keepdim=True)
             # actor_b_loss = (ent_coef * log_prob - min_qf_pi).mean()
 
             # original
-            # q_values_pi = th.cat(self.critic(replay_data.observations, actions_pi), dim=1)
-            # actor_b_loss = (ent_coef * log_prob - q_values_pi).mean()
+            q_values_pi = th.cat(self.critic(replay_data.observations, actions_pi), dim=1)
+            actor_b_loss = (ent_coef * log_prob - q_values_pi).mean()
             actor_b_losses.append(actor_b_loss.item())
 
             # Optimize the actor
