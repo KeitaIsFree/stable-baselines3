@@ -226,7 +226,7 @@ def main(cfg : DictConfig) -> None:
 
     checkpoint_callback = CheckpointCallback(save_freq=cfg.TOTAL_TIMESTEPS//100, save_path='./checkpoints/')
     
-    env = make_vec_env(cfg.ENV_NAME, n_envs=1, vec_env_cls=SubprocVecEnv)
+    env = make_vec_env(cfg.ENV_NAME, n_envs=16, vec_env_cls=SubprocVecEnv)
     if cfg.ALGO == 'TD3':
         model = TD3("MlpPolicy", 
                     env, device=cfg.DEVICE, 
@@ -234,23 +234,73 @@ def main(cfg : DictConfig) -> None:
                     action_noise=NormalActionNoise(numpy.zeros(2), numpy.ones(2) * cfg.PARAM), 
                     tensorboard_log=f'.', seed=cfg.seed)
     elif cfg.ALGO == 'A2C':
-        model = A2C("MlpPolicy", 
-                    env, device=cfg.DEVICE, 
-                    policy_kwargs=cfg.policy_kwargs,
-                    ent_coef=cfg.PARAM, 
-                    tensorboard_log=f'.', seed=cfg.seed)
+        if not cfg.sb3_hyperparams:
+            model = A2C("MlpPolicy", 
+                        env, device=cfg.DEVICE, 
+                        policy_kwargs=cfg.policy_kwargs,
+                        ent_coef=cfg.PARAM, 
+                        tensorboard_log=f'.', seed=cfg.seed)
+        else:
+            def linear_schedule(init_value: float):
+                def func(progress_remaining: float):
+                    return progress_remaining * init_value
+                return func
+            model = A2C("MlpPolicy", 
+                        env, device=cfg.DEVICE, 
+                        ent_coef=0.0,
+                        gae_lambda=0.9,
+                        gamma=0.99,
+                        learning_rate=linear_schedule(0.00096),
+                        max_grad_norm=0.5,
+                        n_steps=8,
+                        normalize_advantage=False,
+                        use_rms_prop=True,
+                        policy_kwargs=dict(log_std_init=-2, ortho_init=False),
+                        use_sde=True,
+                        vf_coef=0.4,
+                        tensorboard_log=f'.', seed=cfg.seed)
+            print("N_ENVS SET TO 16?")
     elif cfg.ALGO == 'SAC':
-        model = SAC("MlpPolicy", 
-                    env, device=cfg.DEVICE, 
-                    policy_kwargs=cfg.policy_kwargs,
-                    ent_coef=cfg.PARAM, 
-                    tensorboard_log=f'.', seed=cfg.seed)
+        if not cfg.sb3_hyperparams:
+            model = SAC("MlpPolicy", 
+                        env, device=cfg.DEVICE, 
+                        policy_kwargs=cfg.policy_kwargs,
+                        ent_coef=cfg.PARAM, 
+                        tensorboard_log=f'.', seed=cfg.seed)
+        else:
+            model = SAC("MlpPolicy", 
+                        env, device=cfg.DEVICE, 
+                        buffer_size=300000,
+                        ent_coef='auto', 
+                        gamma=0.98,
+                        gradient_steps=64,
+                        learning_rate=0.00073,
+                        learning_starts=10000,
+                        policy_kwargs=dict(log_std_init=-3, net_arch=[400, 300]),
+                        tau=0.02,
+                        train_freq=64,
+                        use_sde=True,
+                        tensorboard_log=f'.', seed=cfg.seed)
     elif cfg.ALGO == 'PPO':
-        model = PPO("MlpPolicy", 
-                    env, device=cfg.DEVICE, 
-                    policy_kwargs=cfg.policy_kwargs,
-                    ent_coef=cfg.PARAM,
-                    tensorboard_log=f'.', seed=cfg.seed)
+        if not cfg.sb3_hyperparams:
+            model = PPO("MlpPolicy", 
+                        env, device=cfg.DEVICE, 
+                        policy_kwargs=cfg.policy_kwargs,
+                        ent_coef=cfg.PARAM,
+                        tensorboard_log=f'.', seed=cfg.seed)
+        else:
+            model = PPO("MlpPolicy", 
+                        env,
+                        batch_size=64,
+                        clip_range=0.18,
+                        ent_coef=0.0,
+                        gae_lambda=0.95,
+                        learning_rate=0.0003,
+                        n_epochs=10,
+                        n_steps=2048,
+                        device=cfg.DEVICE, 
+                        tensorboard_log=f'.', seed=cfg.seed)
+            print("N_ENVS SET TO 32?")
     elif cfg.ALGO == 'OURS':
         policy_kwargs = OmegaConf.merge(OmegaConf.create(OmegaConf.to_container(cfg.policy_kwargs)), cfg.ours_policy_kwargs)
         model = OURS("MlpPolicy", 
