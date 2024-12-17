@@ -74,7 +74,7 @@ def evaluate(
     while True:
         with torch.no_grad():
             # actions = numpy.array([(numpy.random.rand() * 2 - 1.0, numpy.random.rand() * 2 - 1.0)])
-            if hasattr(actor, 'actor_e'):
+            if hasattr(actor, 'actor_e') and not cfg.ablation_mode:
                 action = actor.actor_e.predict(obs, deterministic=True)[0]
             else:
                 action = actor.predict(obs, deterministic=True)[0]
@@ -101,7 +101,7 @@ def evaluate(
             break
     
 
-    return ep_r
+    # return ep_r
     # plt.clf()
     # for i in range(1, len(pos_log)):
     #     marker = 'X' if ob_log[i] else 'o'

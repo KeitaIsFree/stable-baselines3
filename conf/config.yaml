@@ -13,8 +13,8 @@ policy_kwargs:
 
 ours_policy_kwargs:
   use_sde: False
-  pi_be_ratio: 0.2
-  pi_b_nf: True
+  pi_be_ratio: 0
+  pi_b_nf: False
 ablation_mode: False
 
 sb3_hyperparams: False
