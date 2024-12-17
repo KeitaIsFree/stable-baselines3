@@ -303,9 +303,24 @@ def main(cfg : DictConfig) -> None:
             print("N_ENVS SET TO 32?")
     elif cfg.ALGO == 'OURS':
         policy_kwargs = OmegaConf.merge(OmegaConf.create(OmegaConf.to_container(cfg.policy_kwargs)), cfg.ours_policy_kwargs)
-        model = OURS("MlpPolicy", 
+        if not cfg.sb3_hyperparams:
+            model = OURS("MlpPolicy", 
                     env, device=cfg.DEVICE, 
                     policy_kwargs=OmegaConf.merge(policy_kwargs, cfg.ours_policy_kwargs), 
+                    ablation_mode=cfg.ablation_mode,
+                    ent_coef=cfg.PARAM, 
+                    tensorboard_log=f'.', seed=cfg.seed)
+        else:
+            model = OURS("MlpPolicy", 
+                    env, device=cfg.DEVICE, 
+                    buffer_size=300000,
+                    gamma=0.98,
+                    gradient_steps=64,
+                    learning_rate=0.00073,
+                    learning_starts=10000,
+                    tau=0.02,
+                    train_freq=64,
+                    policy_kwargs=OmegaConf.merge(policy_kwargs, dict(log_std_init=-3, net_arch=[400, 300])), 
                     ablation_mode=cfg.ablation_mode,
                     ent_coef=cfg.PARAM, 
                     tensorboard_log=f'.', seed=cfg.seed)

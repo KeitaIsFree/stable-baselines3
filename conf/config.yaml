@@ -1,6 +1,6 @@
 TOTAL_TIMESTEPS: 500000
 PARAM: 0.0
-ALGO: "A2C"
+ALGO: "OURS"
 DEVICE: "cuda:0"
 ENV_NAME: "BipedalWalker-v3"
 seed: 1
