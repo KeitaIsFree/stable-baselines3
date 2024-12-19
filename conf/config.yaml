@@ -1,8 +1,8 @@
 TOTAL_TIMESTEPS: 500000
-PARAM: 0.0
+PARAM: 0.01
 ALGO: "OURS"
 DEVICE: "cuda:0"
-ENV_NAME: "BipedalWalker-v3"
+ENV_NAME: "LunarLander-v3"
 seed: 1
 
 EXP_NAME: "thesis/${ENV_NAME}-${ALGO}-sb3hyperparams_nf"
@@ -13,11 +13,11 @@ policy_kwargs:
 
 ours_policy_kwargs:
   use_sde: False
-  pi_be_ratio: 0
-  pi_b_nf: False
+  pi_be_ratio: 0.4
+  pi_b_nf: True
 ablation_mode: False
 
-sb3_hyperparams: False
+sb3_hyperparams: True
 
 
 hydra:

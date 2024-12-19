@@ -214,6 +214,12 @@ class evaluateCallback(BaseCallback):
             # print(results[-1][-1])
         return True
 
+
+def linear_schedule(init_value: float):
+    def func(progress_remaining: float):
+        return progress_remaining * init_value
+    return func
+
 from stable_baselines3.common.noise import NormalActionNoise
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
@@ -226,7 +232,7 @@ def main(cfg : DictConfig) -> None:
 
     checkpoint_callback = CheckpointCallback(save_freq=cfg.TOTAL_TIMESTEPS//100, save_path='./checkpoints/')
     
-    env = make_vec_env(cfg.ENV_NAME, n_envs=16, vec_env_cls=SubprocVecEnv)
+    env = make_vec_env(cfg.ENV_NAME, n_envs=1, vec_env_cls=SubprocVecEnv, env_kwargs={'continuous': True})
     if cfg.ALGO == 'TD3':
         model = TD3("MlpPolicy", 
                     env, device=cfg.DEVICE, 
@@ -241,10 +247,6 @@ def main(cfg : DictConfig) -> None:
                         ent_coef=cfg.PARAM, 
                         tensorboard_log=f'.', seed=cfg.seed)
         else:
-            def linear_schedule(init_value: float):
-                def func(progress_remaining: float):
-                    return progress_remaining * init_value
-                return func
             model = A2C("MlpPolicy", 
                         env, device=cfg.DEVICE, 
                         ent_coef=0.0,
@@ -268,19 +270,37 @@ def main(cfg : DictConfig) -> None:
                         ent_coef=cfg.PARAM, 
                         tensorboard_log=f'.', seed=cfg.seed)
         else:
-            model = SAC("MlpPolicy", 
-                        env, device=cfg.DEVICE, 
-                        buffer_size=300000,
-                        ent_coef='auto', 
-                        gamma=0.98,
-                        gradient_steps=64,
-                        learning_rate=0.00073,
-                        learning_starts=10000,
-                        policy_kwargs=dict(log_std_init=-3, net_arch=[400, 300]),
-                        tau=0.02,
-                        train_freq=64,
-                        use_sde=True,
-                        tensorboard_log=f'.', seed=cfg.seed)
+            if cfg.ENV_NAME == 'BipedalWalker-v3':
+                # BIPEDAL SB3 PARAMS
+                model = SAC("MlpPolicy", 
+                            env, device=cfg.DEVICE, 
+                            buffer_size=300000,
+                            ent_coef='auto', 
+                            gamma=0.98,
+                            gradient_steps=64,
+                            learning_rate=0.00073,
+                            learning_starts=10000,
+                            policy_kwargs=dict(log_std_init=-3, net_arch=[400, 300]),
+                            tau=0.02,
+                            train_freq=64,
+                            use_sde=True,
+                            tensorboard_log=f'.', seed=cfg.seed)
+            elif cfg.ENV_NAME == 'LunarLander-v3':
+                model = SAC("MlpPolicy", 
+                            env, device=cfg.DEVICE, 
+                            batch_size=256,
+                            buffer_size=1000000,
+                            ent_coef='auto', 
+                            gamma=0.99,
+                            gradient_steps=1,
+                            learning_rate=linear_schedule(7.3e-4),
+                            learning_starts=10000,
+                            policy_kwargs=dict(log_std_init=-3, net_arch=[400, 300]),
+                            tau=0.01,
+                            train_freq=1,
+                            tensorboard_log=f'.', seed=cfg.seed)
+            else:
+                assert False, 'INVALID ENV NAME'
     elif cfg.ALGO == 'PPO':
         if not cfg.sb3_hyperparams:
             model = PPO("MlpPolicy", 
@@ -311,20 +331,37 @@ def main(cfg : DictConfig) -> None:
                     ent_coef=cfg.PARAM, 
                     tensorboard_log=f'.', seed=cfg.seed)
         else:
-            model = OURS("MlpPolicy", 
-                    env, device=cfg.DEVICE, 
-                    buffer_size=300000,
-                    gamma=0.98,
-                    gradient_steps=64,
-                    learning_rate=0.00073,
-                    learning_starts=10000,
-                    tau=0.02,
-                    train_freq=64,
-                    policy_kwargs=OmegaConf.merge(policy_kwargs, dict(log_std_init=-3, net_arch=[400, 300])), 
-                    ablation_mode=cfg.ablation_mode,
-                    ent_coef=cfg.PARAM, 
-                    tensorboard_log=f'.', seed=cfg.seed)
-
+            if cfg.ENV_NAME == 'BipedalWalker-v3':
+                model = OURS("MlpPolicy", 
+                        env, device=cfg.DEVICE, 
+                        buffer_size=300000,
+                        gamma=0.98,
+                        gradient_steps=64,
+                        learning_rate=0.00073,
+                        learning_starts=10000,
+                        tau=0.02,
+                        train_freq=64,
+                        policy_kwargs=OmegaConf.merge(policy_kwargs, dict(log_std_init=-3, net_arch=[400, 300])), 
+                        ablation_mode=cfg.ablation_mode,
+                        ent_coef=cfg.PARAM, 
+                        tensorboard_log=f'.', seed=cfg.seed)
+            elif cfg.ENV_NAME == 'LunarLander-v3':
+                model = OURS("MlpPolicy", 
+                            env, device=cfg.DEVICE, 
+                            batch_size=256,
+                            buffer_size=1000000,
+                            ablation_mode=cfg.ablation_mode,
+                            ent_coef=cfg.PARAM,
+                            gamma=0.99,
+                            gradient_steps=1,
+                            learning_rate=linear_schedule(7.3e-4),
+                            learning_starts=10000,
+                            policy_kwargs=OmegaConf.merge(policy_kwargs, dict(log_std_init=-3, net_arch=[400, 300])),
+                            tau=0.01,
+                            train_freq=1,
+                            tensorboard_log=f'.', seed=cfg.seed)
+            else:
+                assert False, 'INVALID ENV NAME'
     model.learn(total_timesteps=cfg.TOTAL_TIMESTEPS, callback=[evaluateCallback(cfg), checkpoint_callback])
     # results.append(evaluate(make_env, "AbsEnv-v0", 1, "ppp", model, skew=10))
 
