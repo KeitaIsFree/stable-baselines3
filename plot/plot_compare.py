@@ -162,7 +162,9 @@ def tfboard2csv(event_acc, path):
 
 
 # os.chdir('..')
-exp_ids = ['thesis/BipedalWalker-v3-OURS-sb3hyperparams_nf', 'thesis/BipedalWalker-v3-SAC-sb3hyperparams_nf', 'thesis/BipedalWalker-v3-PPO-sb3hyperparams_nf']
+# exp_ids = ['thesis/BipedalWalker-v3-OURS-pibe-0.2-sb3hyperparams_nf', 'thesis/BipedalWalker-v3-SAC-sb3hyperparams_nf', 'thesis/BipedalWalker-v3-PPO-sb3hyperparams_nf']
+exp_ids = ['thesis/BipedalWalker-v3-OURS-pibe-0.0-sb3hyperparams_nf', 'thesis/BipedalWalker-v3-OURS-pibe-0.2-sb3hyperparams_nf', 'thesis/BipedalWalker-v3-OURS-pibe-0.4-sb3hyperparams_nf']
+# exp_ids = ['thesis/LunarLander-v2-OURS-sb3hyperparams_nf', 'thesis/LunarLander-v2-SAC-sb3hyperparams_nf']
 # exp_ids = ['AbsEnv-v0-extralong-SAC-0.01_gauss', 'AbsEnv-v0-extralong-A2C-0.01_gauss',  'AbsEnv-v0-extralong-OURS-0.01_gauss']
 # exp_ids = ['AbsExploreEnv-v0-OURS-0.001_gauss', 'AbsExploreEnv-v0-OURS-0.001_nf', 'AbsExploreEnv-v0-OURS-0.001_pibe0.0_gauss', 'AbsExploreEnv-v0-OURS-0.001_pibe0.0_nf']
 # exp_ids = ['AbsExploreEnv-v0-OURS-0.001_gauss', 'AbsExploreEnv-v0-OURS-0.001_nf']
@@ -221,6 +223,8 @@ for exp_id in exp_ids:
     else:
         x = numpy.linspace(0, 500000, len(plot_datas[exp_id]['means']['pi_eval']))
     exp_label = exp_id.split('_')[0].split('-')[-2]
+    # if exp_label == '0.2':
+    #     exp_label = 'OURS'
     plt.plot(x, plot_datas[exp_id]['means']['pi_eval'], label=exp_label)
     # plt.fill_between(x, plot_datas[exp_id]['means']['pi_b'] + plot_datas[exp_id]['stds']['pi_b'], plot_datas[exp_id]['means']['pi_b'] - plot_datas[exp_id]['stds']['pi_b'], alpha=0.1)
     plt.fill_between(x, plot_datas[exp_id]['means']['pi_eval'] + plot_datas[exp_id]['stds']['pi_eval'], plot_datas[exp_id]['means']['pi_eval'] - plot_datas[exp_id]['stds']['pi_eval'], alpha=0.1)
@@ -254,7 +258,7 @@ plt.ylabel("Episode Return")
 # plt.ylim(-1, 1)
 # os.makedirs(f'{base_dir}/{fc_config}', exist_ok=True)
 base_dir = base_dir.split('_')[0]
-base_dir = 'Bipedal_result'
+base_dir = 'Bipedal_result_pibe0.2_all'
 os.makedirs(f'{base_dir}', exist_ok=True)
 # plt.show()
 plt.savefig(f'{base_dir}/evals.pdf')

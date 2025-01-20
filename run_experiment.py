@@ -101,7 +101,7 @@ def evaluate(
             break
     
 
-    # return ep_r
+    return ep_r
     # plt.clf()
     # for i in range(1, len(pos_log)):
     #     marker = 'X' if ob_log[i] else 'o'
@@ -228,11 +228,11 @@ def main(cfg : DictConfig) -> None:
 
     os.makedirs(f'runs/{cfg.EXP_NAME}', exist_ok=True)
     os.chdir(f'runs/{cfg.EXP_NAME}')
-    os.makedirs(f'gaussian_{cfg.seed}', exist_ok=True)
+    # os.makedirs(f'gaussian_{cfg.seed}', exist_ok=True)
 
-    checkpoint_callback = CheckpointCallback(save_freq=cfg.TOTAL_TIMESTEPS//100, save_path='./checkpoints/')
+    checkpoint_callback = CheckpointCallback(save_freq=cfg.TOTAL_TIMESTEPS//100, save_path=f'./checkpoints/seed={cfg.seed}/')
     
-    env = make_vec_env(cfg.ENV_NAME, n_envs=1, vec_env_cls=SubprocVecEnv, env_kwargs={'continuous': True})
+    env = make_vec_env(cfg.ENV_NAME, n_envs=1, vec_env_cls=SubprocVecEnv)
     if cfg.ALGO == 'TD3':
         model = TD3("MlpPolicy", 
                     env, device=cfg.DEVICE, 
@@ -341,7 +341,7 @@ def main(cfg : DictConfig) -> None:
                         learning_starts=10000,
                         tau=0.02,
                         train_freq=64,
-                        policy_kwargs=OmegaConf.merge(policy_kwargs, dict(log_std_init=-3, net_arch=[400, 300])), 
+                        policy_kwargs=policy_kwargs, 
                         ablation_mode=cfg.ablation_mode,
                         ent_coef=cfg.PARAM, 
                         tensorboard_log=f'.', seed=cfg.seed)
