@@ -6,7 +6,7 @@ from stable_baselines3.common.vec_env import SubprocVecEnv
 from stable_baselines3.common.callbacks import CheckpointCallback
 from stable_baselines3.common.distributions import StateDependentNoiseDistribution
 
-from gymnasium.wrappers import TransformObservation
+from gymnasium import ObservationWrapper
 
 import numpy
 
@@ -32,6 +32,11 @@ import matplotlib.pyplot as plt
 import hydra
 from omegaconf import DictConfig, OmegaConf
 
+
+class ObservationTypeConv(ObservationWrapper):
+    def observation(self, obs):
+        return obs.astype('float32')
+
 # print("SKEWING ENV")
 def make_env(env_id, seed):
     def thunk():
@@ -39,7 +44,11 @@ def make_env(env_id, seed):
             env = gym.make(env_id, continuous=True)
         else:
             env = gym.make(env_id)
+        
         # print('no skew')
+        # env = TransformObservation(env, lambda obs: obs.astype("float32"), env.observation_space)
+
+        env = TransformObservation(env, lambda obs: obs.astype("float32"), env.observation_space)
         env = gym.wrappers.RecordEpisodeStatistics(env)
         env.action_space.seed(seed)
         return env
@@ -242,13 +251,16 @@ def main(cfg : DictConfig) -> None:
 
     checkpoint_callback = CheckpointCallback(save_freq=cfg.TOTAL_TIMESTEPS//100, save_path=f'./checkpoints/seed={cfg.seed}/')
     
-    if cfg.ENV_NAME == 'LunarLander-v2':
-        env = make_vec_env(cfg.ENV_NAME, n_envs=1, vec_env_cls=SubprocVecEnv, env_kwargs={ 'continuous': True }, seed=cfg.seed)
+    if cfg.ENV_NAME == 'LunarLander-v3':
+        env = gym.make(cfg.ENV_NAME, continuous=True)
     else:
-        env = make_vec_env(cfg.ENV_NAME, n_envs=1, vec_env_cls=SubprocVecEnv, seed=cfg.seed)
+        env = gym.make(cfg.ENV_NAME)
 
 
-    env = TransformObservation(env, lambda obs: obs.astype("float32"))  # Convert to float32
+    # env = TransformObservation(env, lambda obs: obs.astype("float32"), env.observation_space)  # Convert to float32
+    
+
+    env = ObservationTypeConv(env)
 
     
     if cfg.ALGO == 'TD3':

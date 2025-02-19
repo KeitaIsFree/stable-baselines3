@@ -1,5 +1,5 @@
 import warnings
-from typing import Any, Dict, Union
+from typing import Any, Union
 
 import gymnasium as gym
 import numpy as np
@@ -37,7 +37,8 @@ def _check_non_zero_start(space: spaces.Space, space_type: str = "observation", 
         warnings.warn(
             f"{type(space).__name__} {space_type} space {maybe_key} with a non-zero start (start={space.start}) "
             "is not supported by Stable-Baselines3. "
-            f"You can use a wrapper or update your {space_type} space."
+            "You can use a wrapper (see https://stable-baselines3.readthedocs.io/en/master/guide/custom_env.html) "
+            f"or update your {space_type} space."
         )
 
 
@@ -172,10 +173,10 @@ def _check_goal_env_obs(obs: dict, observation_space: spaces.Dict, method_name: 
 
 
 def _check_goal_env_compute_reward(
-    obs: Dict[str, Union[np.ndarray, int]],
+    obs: dict[str, Union[np.ndarray, int]],
     env: gym.Env,
     reward: float,
-    info: Dict[str, Any],
+    info: dict[str, Any],
 ) -> None:
     """
     Check that reward is computed with `compute_reward`

@@ -4,7 +4,7 @@ import sys
 import time
 import warnings
 from copy import deepcopy
-from typing import Any, Dict, List, Optional, Tuple, Type, TypeVar, Union
+from typing import Any, Optional, TypeVar, Union
 
 import numpy as np
 import torch as th
@@ -79,7 +79,7 @@ class OffPolicyAlgorithm(BaseAlgorithm):
 
     def __init__(
         self,
-        policy: Union[str, Type[BasePolicy]],
+        policy: Union[str, type[BasePolicy]],
         env: Union[GymEnv, str],
         learning_rate: Union[float, Schedule],
         buffer_size: int = 1_000_000,  # 1e6
@@ -87,13 +87,13 @@ class OffPolicyAlgorithm(BaseAlgorithm):
         batch_size: int = 256,
         tau: float = 0.005,
         gamma: float = 0.99,
-        train_freq: Union[int, Tuple[int, str]] = (1, "step"),
+        train_freq: Union[int, tuple[int, str]] = (1, "step"),
         gradient_steps: int = 1,
         action_noise: Optional[ActionNoise] = None,
-        replay_buffer_class: Optional[Type[ReplayBuffer]] = None,
-        replay_buffer_kwargs: Optional[Dict[str, Any]] = None,
+        replay_buffer_class: Optional[type[ReplayBuffer]] = None,
+        replay_buffer_kwargs: Optional[dict[str, Any]] = None,
         optimize_memory_usage: bool = False,
-        policy_kwargs: Optional[Dict[str, Any]] = None,
+        policy_kwargs: Optional[dict[str, Any]] = None,
         stats_window_size: int = 100,
         tensorboard_log: Optional[str] = None,
         verbose: int = 0,
@@ -105,7 +105,7 @@ class OffPolicyAlgorithm(BaseAlgorithm):
         sde_sample_freq: int = -1,
         use_sde_at_warmup: bool = False,
         sde_support: bool = True,
-        supported_action_spaces: Optional[Tuple[Type[spaces.Space], ...]] = None,
+        supported_action_spaces: Optional[tuple[type[spaces.Space], ...]] = None,
     ):
         super().__init__(
             policy=policy,
@@ -256,7 +256,7 @@ class OffPolicyAlgorithm(BaseAlgorithm):
         reset_num_timesteps: bool = True,
         tb_log_name: str = "run",
         progress_bar: bool = False,
-    ) -> Tuple[int, BaseCallback]:
+    ) -> tuple[int, BaseCallback]:
         """
         cf `BaseAlgorithm`.
         """
@@ -362,7 +362,7 @@ class OffPolicyAlgorithm(BaseAlgorithm):
         learning_starts: int,
         action_noise: Optional[ActionNoise] = None,
         n_envs: int = 1,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Sample an action according to the exploration policy.
         This is either done by sampling the probability distribution of the policy,
@@ -391,8 +391,6 @@ class OffPolicyAlgorithm(BaseAlgorithm):
 
         # Rescale the action from [low, high] to [-1, 1]
         if isinstance(self.action_space, spaces.Box):
-            if not isinstance(unscaled_action, np.ndarray):
-                unscaled_action = unscaled_action.cpu().numpy().reshape((-1, *self.action_space.shape)) 
             scaled_action = self.policy.scale_action(unscaled_action)
 
             # Add noise to the action (improve exploration)
@@ -408,9 +406,9 @@ class OffPolicyAlgorithm(BaseAlgorithm):
             action = buffer_action
         return action, buffer_action
 
-    def _dump_logs(self) -> None:
+    def dump_logs(self) -> None:
         """
-        Write log.
+        Write log data.
         """
         assert self.ep_info_buffer is not None
         assert self.ep_success_buffer is not None
@@ -444,10 +442,10 @@ class OffPolicyAlgorithm(BaseAlgorithm):
         self,
         replay_buffer: ReplayBuffer,
         buffer_action: np.ndarray,
-        new_obs: Union[np.ndarray, Dict[str, np.ndarray]],
+        new_obs: Union[np.ndarray, dict[str, np.ndarray]],
         reward: np.ndarray,
         dones: np.ndarray,
-        infos: List[Dict[str, Any]],
+        infos: list[dict[str, Any]],
     ) -> None:
         """
         Store transition in the replay buffer.
@@ -489,7 +487,7 @@ class OffPolicyAlgorithm(BaseAlgorithm):
                     next_obs[i] = infos[i]["terminal_observation"]
                     # VecNormalize normalizes the terminal observation
                     if self._vec_normalize_env is not None:
-                        next_obs[i] = self._vec_normalize_env.unnormalize_obs(next_obs[i, :])
+                        next_obs[i] = self._vec_normalize_env.unnormalize_obs(next_obs[i, :])  # type: ignore[assignment]
 
         replay_buffer.add(
             self._last_original_obs,  # type: ignore[arg-type]
@@ -596,7 +594,7 @@ class OffPolicyAlgorithm(BaseAlgorithm):
 
                     # Log training infos
                     if log_interval is not None and self._episode_num % log_interval == 0:
-                        self._dump_logs()
+                        self.dump_logs()
         callback.on_rollout_end()
 
         return RolloutReturn(num_collected_steps * env.num_envs, num_collected_episodes, continue_training)

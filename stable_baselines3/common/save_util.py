@@ -12,7 +12,7 @@ import pathlib
 import pickle
 import warnings
 import zipfile
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 import cloudpickle
 import torch as th
@@ -73,7 +73,7 @@ def is_json_serializable(item: Any) -> bool:
     return json_serializable
 
 
-def data_to_json(data: Dict[str, Any]) -> str:
+def data_to_json(data: dict[str, Any]) -> str:
     """
     Turn data (class parameters) into a JSON string for storing
 
@@ -128,7 +128,7 @@ def data_to_json(data: Dict[str, Any]) -> str:
     return json_string
 
 
-def json_to_data(json_string: str, custom_objects: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def json_to_data(json_string: str, custom_objects: Optional[dict[str, Any]] = None) -> dict[str, Any]:
     """
     Turn JSON serialization of class-parameters back into dictionary.
 
@@ -181,7 +181,7 @@ def json_to_data(json_string: str, custom_objects: Optional[Dict[str, Any]] = No
 @functools.singledispatch
 def open_path(
     path: Union[str, pathlib.Path, io.BufferedIOBase], mode: str, verbose: int = 0, suffix: Optional[str] = None
-) -> Union[io.BufferedWriter, io.BufferedReader, io.BytesIO]:
+) -> Union[io.BufferedWriter, io.BufferedReader, io.BytesIO, io.BufferedRandom]:
     """
     Opens a path for reading or writing with a preferred suffix and raises debug information.
     If the provided path is a derivative of io.BufferedIOBase it ensures that the file
@@ -216,7 +216,7 @@ def open_path(
         mode = {"write": "w", "read": "r", "w": "w", "r": "r"}[mode]
     except KeyError as e:
         raise ValueError("Expected mode to be either 'w' or 'r'.") from e
-    if ("w" == mode) and not path.writable() or ("r" == mode) and not path.readable():
+    if (("w" == mode) and not path.writable()) or (("r" == mode) and not path.readable()):
         error_msg = "writable" if "w" == mode else "readable"
         raise ValueError(f"Expected a {error_msg} file.")
     return path
@@ -293,9 +293,9 @@ def open_path_pathlib(path: pathlib.Path, mode: str, verbose: int = 0, suffix: O
 
 def save_to_zip_file(
     save_path: Union[str, pathlib.Path, io.BufferedIOBase],
-    data: Optional[Dict[str, Any]] = None,
-    params: Optional[Dict[str, Any]] = None,
-    pytorch_variables: Optional[Dict[str, Any]] = None,
+    data: Optional[dict[str, Any]] = None,
+    params: Optional[dict[str, Any]] = None,
+    pytorch_variables: Optional[dict[str, Any]] = None,
     verbose: int = 0,
 ) -> None:
     """
@@ -376,11 +376,11 @@ def load_from_pkl(path: Union[str, pathlib.Path, io.BufferedIOBase], verbose: in
 def load_from_zip_file(
     load_path: Union[str, pathlib.Path, io.BufferedIOBase],
     load_data: bool = True,
-    custom_objects: Optional[Dict[str, Any]] = None,
+    custom_objects: Optional[dict[str, Any]] = None,
     device: Union[th.device, str] = "auto",
     verbose: int = 0,
     print_system_info: bool = False,
-) -> Tuple[Optional[Dict[str, Any]], TensorDict, Optional[TensorDict]]:
+) -> tuple[Optional[dict[str, Any]], TensorDict, Optional[TensorDict]]:
     """
     Load model data from a .zip archive
 

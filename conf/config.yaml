@@ -2,7 +2,7 @@ TOTAL_TIMESTEPS: 100000
 PARAM: 0.00001
 ALGO: "OURS"
 DEVICE: "cuda:2"
-ENV_NAME: "InvertedPendulum-v4"
+ENV_NAME: "LunarLander-v3"
 seed: 1
 
 # EXP_NAME: "thesis/test_0_entropy"

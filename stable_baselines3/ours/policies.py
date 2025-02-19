@@ -188,6 +188,7 @@ class NFActor(BasePolicy):
         pass
 
     def forward(self, x: PyTorchObs, deterministic: bool = False) -> th.Tensor:
+        x = x.type(th.float32)
         try:
             x_t, log_dets = self.model.sample(len(x), context=x)
         except AssertionError as e:
@@ -410,6 +411,8 @@ class Actor(BasePolicy):
     def action_log_prob(self, obs: PyTorchObs, deterministic=False) -> Tuple[th.Tensor, th.Tensor]:
         mean_actions, log_std, kwargs = self.get_action_dist_params(obs)
         # return action and associated log prob
+        if deterministic:
+            return mean_actions, None
         return self.action_dist.log_prob_from_params(mean_actions, log_std, **kwargs, deterministic=deterministic)
 
     def _predict(self, observation: PyTorchObs, deterministic: bool = False) -> th.Tensor:

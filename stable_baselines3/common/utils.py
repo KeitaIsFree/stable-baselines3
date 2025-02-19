@@ -4,8 +4,9 @@ import platform
 import random
 import re
 from collections import deque
+from collections.abc import Iterable
 from itertools import zip_longest
-from typing import Dict, Iterable, List, Optional, Tuple, Union
+from typing import Optional, Union
 
 import cloudpickle
 import gymnasium as gym
@@ -243,12 +244,14 @@ def check_shape_equal(space1: spaces.Space, space2: spaces.Space) -> None:
     :param space2: Other space
     """
     if isinstance(space1, spaces.Dict):
-        assert isinstance(space2, spaces.Dict), "spaces must be of the same type"
-        assert space1.spaces.keys() == space2.spaces.keys(), "spaces must have the same keys"
+        assert isinstance(space2, spaces.Dict), f"spaces must be of the same type: {type(space1)} != {type(space2)}"
+        assert (
+            space1.spaces.keys() == space2.spaces.keys()
+        ), f"spaces must have the same keys: {list(space1.spaces.keys())} != {list(space2.spaces.keys())}"
         for key in space1.spaces.keys():
             check_shape_equal(space1.spaces[key], space2.spaces[key])
     elif isinstance(space1, spaces.Box):
-        assert space1.shape == space2.shape, "spaces must have the same shape"
+        assert space1.shape == space2.shape, f"spaces must have the same shape: {space1.shape} != {space2.shape}"
 
 
 def is_vectorized_box_observation(observation: np.ndarray, observation_space: spaces.Box) -> bool:
@@ -415,7 +418,7 @@ def safe_mean(arr: Union[np.ndarray, list, deque]) -> float:
     return np.nan if len(arr) == 0 else float(np.mean(arr))  # type: ignore[arg-type]
 
 
-def get_parameters_by_name(model: th.nn.Module, included_names: Iterable[str]) -> List[th.Tensor]:
+def get_parameters_by_name(model: th.nn.Module, included_names: Iterable[str]) -> list[th.Tensor]:
     """
     Extract parameters from the state dict of ``model``
     if the name contains one of the strings in ``included_names``.
@@ -473,7 +476,7 @@ def polyak_update(
             th.add(target_param.data, param.data, alpha=tau, out=target_param.data)
 
 
-def obs_as_tensor(obs: Union[np.ndarray, Dict[str, np.ndarray]], device: th.device) -> Union[th.Tensor, TensorDict]:
+def obs_as_tensor(obs: Union[np.ndarray, dict[str, np.ndarray]], device: th.device) -> Union[th.Tensor, TensorDict]:
     """
     Moves the observation to the given device.
 
@@ -517,7 +520,7 @@ def should_collect_more_steps(
         )
 
 
-def get_system_info(print_info: bool = True) -> Tuple[Dict[str, str], str]:
+def get_system_info(print_info: bool = True) -> tuple[dict[str, str], str]:
     """
     Retrieve system and python env info for the current system.
 
