@@ -1,12 +1,13 @@
-TOTAL_TIMESTEPS: 500000
-PARAM: 0.01
+TOTAL_TIMESTEPS: 100000
+PARAM: 0.00001
 ALGO: "OURS"
-DEVICE: "cuda:1"
-ENV_NAME: "BipedalWalker-v3"
+DEVICE: "cuda:2"
+ENV_NAME: "InvertedPendulum-v4"
 seed: 1
 
-EXP_NAME: "thesis/${ENV_NAME}-${ALGO}-pibe-0.2-sb3hyperparams_nf"
-
+# EXP_NAME: "thesis/test_0_entropy"
+EXP_NAME: "ecml/${ENV_NAME}-${ALGO}-${PARAM}-sb3hyperparams_nf"
+# EXP_NAME: 'test-discriminantneg_1e-'
 
 policy_kwargs:
   use_sde: True
@@ -17,7 +18,9 @@ ours_policy_kwargs:
   pi_b_nf: True
 ablation_mode: False
 
-sb3_hyperparams: True
+sb3_hyperparams: False
+
+check_anomaly: True # checks if any non-finite values appear in torch backward()
 
 
 hydra:

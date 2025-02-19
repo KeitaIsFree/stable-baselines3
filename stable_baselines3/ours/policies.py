@@ -4,6 +4,7 @@ import torch as th
 from gymnasium import spaces
 from torch import nn
 import torch.nn.functional as F
+from torchinfo import summary
 
 from stable_baselines3.common.distributions import SquashedDiagGaussianDistribution, StateDependentNoiseDistribution
 from stable_baselines3.common.policies import BasePolicy, ContinuousCritic
@@ -90,7 +91,7 @@ class NFActor(BasePolicy):
         obs_dim = get_obs_shape(observation_space)[0]
         # self.state_embedding_dim=obs_dim
         # self.flow_mlp_sizes=(16,16)
-        self.nf_num_flows=8
+        self.nf_num_flows=4
         self.flow_type = flow_type
 
 
@@ -108,7 +109,7 @@ class NFActor(BasePolicy):
         hidden_layers = 2
         nfs = []
         for i in range(self.nf_num_flows):
-            nfs += [normflows.flows.CoupledRationalQuadraticSpline(action_dim, hidden_layers, hidden_units, 
+            nfs += [normflows.flows.AutoregressiveRationalQuadraticSpline(action_dim, hidden_layers, hidden_units, 
                                                       num_context_channels=obs_dim)]
             nfs += [normflows.flows.LULinearPermute(action_dim)]
         # for i in range(self.nf_num_flows):
@@ -116,6 +117,12 @@ class NFActor(BasePolicy):
         q0 = normflows.distributions.DiagGaussian(action_dim, trainable=False)
         model = normflows.ConditionalNormalizingFlow(q0, nfs)
         self.model = model
+
+        self.tanh = th.nn.Tanh()
+        # for name, param in model.named_parameters():
+        #     print(f"Name: {name}, Shape: {param.shape}, Requires Grad: {param.requires_grad}")
+        #     exit()
+        summary(model)
 
         # s_em = []
         # for layer_i in range(len(self.state_embedding_layer_sizes) + 1):
@@ -181,7 +188,12 @@ class NFActor(BasePolicy):
         pass
 
     def forward(self, x: PyTorchObs, deterministic: bool = False) -> th.Tensor:
-        x_t, log_dets = self.model.sample(len(x), context=x)
+        try:
+            x_t, log_dets = self.model.sample(len(x), context=x)
+        except AssertionError as e:
+            print('observation: ', x)
+            for param in self.model.parameters():
+                print(f"param: {param.data}")
         # mean = None
         # normal = th.distributions.Normal(th.FloatTensor([[0] * self.act_dim] * len(x)), th.FloatTensor([[1] * self.act_dim] * len(x)))
         # x_t = normal.rsample()
@@ -211,17 +223,18 @@ class NFActor(BasePolicy):
 
         # # print('before tanh: ', x_t)
         # # log_dets += th.sum(2 * th.log(th.cosh(x_t)), 1)
-        x_t = th.tanh(x_t)
-        log_dets -= th.sum(th.log(1 - x_t ** 2), 1)
+        x_t_ =  x_t.clone()
+        x_t_2 = th.tanh(x_t_)
+        log_dets = log_dets - th.sum(th.log(1 - x_t_2 ** 2), 1)
         # print('after tanh: ', x_t)
         # print(log_dets)
         
-        return x_t, log_dets
+        return x_t_2, log_dets
 
     def get_log_prob_from_act(self, s, a):
         a_ = th.atanh(a)
         log_det = self.model.log_prob(a_, context=s).to('cpu')
-        log_det += th.sum(2 * th.log(th.cosh(a_)), 1).to('cpu')
+        log_det = log_det + th.sum(2 * th.log(th.cosh(a_)), 1).to('cpu')
         return log_det
 
     def action_log_prob(self, obs: PyTorchObs) -> Tuple[th.Tensor, th.Tensor]:
@@ -386,7 +399,7 @@ class Actor(BasePolicy):
         a_ = th.atanh(a)
 
         log_probs = th.sum(dist.log_prob(a_), 1).to('cpu')
-        log_probs += th.sum(2 * th.log(th.cosh(a_)), 1).to('cpu')
+        log_probs = log_probs + th.sum(2 * th.log(th.cosh(a_)), 1).to('cpu')
         return log_probs
 
     def forward(self, obs: PyTorchObs, deterministic: bool = False) -> th.Tensor:
@@ -443,6 +456,7 @@ class OURSPolicy(BasePolicy):
         observation_space: spaces.Space,
         action_space: spaces.Box,
         lr_schedule: Schedule,
+        lr_schedule_pi_b: Schedule = None,
         net_arch: Optional[Union[List[int], Dict[str, List[int]]]] = None,
         activation_fn: Type[nn.Module] = nn.ReLU,
         use_sde: bool = True,
@@ -508,7 +522,7 @@ class OURSPolicy(BasePolicy):
 
         self.share_features_extractor = share_features_extractor
 
-        self._build(lr_schedule)
+        self._build(lr_schedule, lr_schedule_pi_b)
 
         self.ent_coef_tensor = None
 
@@ -517,7 +531,7 @@ class OURSPolicy(BasePolicy):
             print("RUNNIGN ABLATION MODE")
             self.pi_be_ratio = 0.0
 
-    def _build(self, lr_schedule: Schedule) -> None:
+    def _build(self, lr_schedule: Schedule, lr_schedule_pi_b: Schedule) -> None:
         if self.pi_b_nf:
             self.actor_b = self.make_actor(nf=True)
         else:
@@ -525,7 +539,7 @@ class OURSPolicy(BasePolicy):
         # print(self.actor_b)
         self.actor_b.optimizer = self.optimizer_class(
             self.actor_b.parameters(),
-            lr=lr_schedule(1),  # type: ignore[call-arg]
+            lr=lr_schedule_pi_b(1) if lr_schedule_pi_b is not None else lr_schedule(1),  # type: ignore[call-arg]
             **self.optimizer_kwargs,
         )
         

@@ -6,6 +6,7 @@ from stable_baselines3.common.vec_env import SubprocVecEnv
 from stable_baselines3.common.callbacks import CheckpointCallback
 from stable_baselines3.common.distributions import StateDependentNoiseDistribution
 
+from gymnasium.wrappers import TransformObservation
 
 import numpy
 
@@ -34,7 +35,10 @@ from omegaconf import DictConfig, OmegaConf
 # print("SKEWING ENV")
 def make_env(env_id, seed):
     def thunk():
-        env = gym.make(env_id)
+        if env_id == 'LunarLander-v2':
+            env = gym.make(env_id, continuous=True)
+        else:
+            env = gym.make(env_id)
         # print('no skew')
         env = gym.wrappers.RecordEpisodeStatistics(env)
         env.action_space.seed(seed)
@@ -61,7 +65,10 @@ def evaluate(
     # ignoring eval_episodes, only doing one
     ########
     # envs = make_env(env_id, 0)
-    env = gym.make(env_id)
+    if env_id == 'LunarLander-v2':
+        env = gym.make(env_id, continuous=True)
+    else:
+        env = gym.make(env_id)
     # note: qf1 and qf2 are not used in this script
 
     obs, _ = env.reset()
@@ -225,6 +232,9 @@ from stable_baselines3.common.noise import NormalActionNoise
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg : DictConfig) -> None:
 
+    if cfg.check_anomaly:
+        torch.autograd.set_detect_anomaly(True)
+
 
     os.makedirs(f'runs/{cfg.EXP_NAME}', exist_ok=True)
     os.chdir(f'runs/{cfg.EXP_NAME}')
@@ -232,7 +242,15 @@ def main(cfg : DictConfig) -> None:
 
     checkpoint_callback = CheckpointCallback(save_freq=cfg.TOTAL_TIMESTEPS//100, save_path=f'./checkpoints/seed={cfg.seed}/')
     
-    env = make_vec_env(cfg.ENV_NAME, n_envs=1, vec_env_cls=SubprocVecEnv)
+    if cfg.ENV_NAME == 'LunarLander-v2':
+        env = make_vec_env(cfg.ENV_NAME, n_envs=1, vec_env_cls=SubprocVecEnv, env_kwargs={ 'continuous': True }, seed=cfg.seed)
+    else:
+        env = make_vec_env(cfg.ENV_NAME, n_envs=1, vec_env_cls=SubprocVecEnv, seed=cfg.seed)
+
+
+    env = TransformObservation(env, lambda obs: obs.astype("float32"))  # Convert to float32
+
+    
     if cfg.ALGO == 'TD3':
         model = TD3("MlpPolicy", 
                     env, device=cfg.DEVICE, 
@@ -285,7 +303,7 @@ def main(cfg : DictConfig) -> None:
                             train_freq=64,
                             use_sde=True,
                             tensorboard_log=f'.', seed=cfg.seed)
-            elif cfg.ENV_NAME == 'LunarLander-v3':
+            elif cfg.ENV_NAME == 'LunarLander-v2':
                 model = SAC("MlpPolicy", 
                             env, device=cfg.DEVICE, 
                             batch_size=256,
@@ -345,7 +363,7 @@ def main(cfg : DictConfig) -> None:
                         ablation_mode=cfg.ablation_mode,
                         ent_coef=cfg.PARAM, 
                         tensorboard_log=f'.', seed=cfg.seed)
-            elif cfg.ENV_NAME == 'LunarLander-v3':
+            elif cfg.ENV_NAME == 'LunarLander-v2':
                 model = OURS("MlpPolicy", 
                             env, device=cfg.DEVICE, 
                             batch_size=256,
@@ -355,11 +373,12 @@ def main(cfg : DictConfig) -> None:
                             gamma=0.99,
                             gradient_steps=1,
                             learning_rate=linear_schedule(7.3e-4),
+                            # policy_kwargs=dict(lr_schedule_pi_b=linear_schedule(7.3e-6)),
                             learning_starts=10000,
-                            policy_kwargs=OmegaConf.merge(policy_kwargs, dict(log_std_init=-3, net_arch=[400, 300])),
                             tau=0.01,
                             train_freq=1,
                             tensorboard_log=f'.', seed=cfg.seed)
+                # print("DISABLED INITIAL RANDOM PHASE")
             else:
                 assert False, 'INVALID ENV NAME'
     model.learn(total_timesteps=cfg.TOTAL_TIMESTEPS, callback=[evaluateCallback(cfg), checkpoint_callback])

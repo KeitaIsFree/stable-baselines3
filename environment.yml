@@ -1,4 +1,4 @@
-name: eac
+name: eac-clone
 channels:
   - pytorch
   - nvidia
