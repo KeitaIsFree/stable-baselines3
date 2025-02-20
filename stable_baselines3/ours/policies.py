@@ -192,7 +192,8 @@ class NFActor(BasePolicy):
         try:
             x_t, log_dets = self.model.sample(len(x), context=x)
         except AssertionError as e:
-            print('observation: ', x)
+            # print('observation: ', x)
+            # pass
             for param in self.model.parameters():
                 print(f"param: {param.data}")
         # mean = None

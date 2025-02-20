@@ -13,15 +13,15 @@ SEEDS=(1 2 3 4 5 6 7 8 9 10)
 # done
 
 for SEED in ${SEEDS[@]}; do
-    python 'run_experiment.py' seed=$SEED DEVICE="cuda:0" PARAM='1e-3'&
+    python -u 'run_experiment.py' seed=$SEED DEVICE="cuda:0" PARAM='1e-3' >> "log.txt" 2>&1 &
 done
 
 for SEED in ${SEEDS[@]}; do
-    python 'run_experiment.py' seed=$SEED DEVICE="cuda:1" PARAM='1e-4'&
+    python -u 'run_experiment.py' seed=$SEED DEVICE="cuda:1" PARAM='1e-4' >> "log.txt" 2>&1 &
 done
 
 for SEED in ${SEEDS[@]}; do
-    python 'run_experiment.py' seed=$SEED DEVICE="cuda:2" PARAM='1e-5' &
+    python -u 'run_experiment.py' seed=$SEED DEVICE="cuda:2" PARAM='1e-5' >> "log.txt" 2>&1 &
 done
 
 # wait 

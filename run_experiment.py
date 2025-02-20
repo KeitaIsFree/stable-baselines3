@@ -74,7 +74,7 @@ def evaluate(
     # ignoring eval_episodes, only doing one
     ########
     # envs = make_env(env_id, 0)
-    if env_id == 'LunarLander-v2':
+    if env_id == 'LunarLander-v3':
         env = gym.make(env_id, continuous=True)
     else:
         env = gym.make(env_id)
@@ -375,7 +375,7 @@ def main(cfg : DictConfig) -> None:
                         ablation_mode=cfg.ablation_mode,
                         ent_coef=cfg.PARAM, 
                         tensorboard_log=f'.', seed=cfg.seed)
-            elif cfg.ENV_NAME == 'LunarLander-v2':
+            elif cfg.ENV_NAME == 'LunarLander-v3':
                 model = OURS("MlpPolicy", 
                             env, device=cfg.DEVICE, 
                             batch_size=256,
@@ -386,7 +386,7 @@ def main(cfg : DictConfig) -> None:
                             gradient_steps=1,
                             learning_rate=linear_schedule(7.3e-4),
                             # policy_kwargs=dict(lr_schedule_pi_b=linear_schedule(7.3e-6)),
-                            learning_starts=10000,
+                            # learning_starts=10000,
                             tau=0.01,
                             train_freq=1,
                             tensorboard_log=f'.', seed=cfg.seed)

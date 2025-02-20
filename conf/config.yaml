@@ -1,4 +1,4 @@
-TOTAL_TIMESTEPS: 100000
+TOTAL_TIMESTEPS: 500000
 PARAM: 0.00001
 ALGO: "OURS"
 DEVICE: "cuda:2"
@@ -20,7 +20,7 @@ ablation_mode: False
 
 sb3_hyperparams: False
 
-check_anomaly: True # checks if any non-finite values appear in torch backward()
+check_anomaly: False # checks if any non-finite values appear in torch backward()
 
 
 hydra:
