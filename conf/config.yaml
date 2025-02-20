@@ -18,9 +18,9 @@ ours_policy_kwargs:
   pi_b_nf: True
 ablation_mode: False
 
-sb3_hyperparams: False
+sb3_hyperparams: True
 
-check_anomaly: False # checks if any non-finite values appear in torch backward()
+check_anomaly: True # checks if any non-finite values appear in torch backward()
 
 
 hydra:
