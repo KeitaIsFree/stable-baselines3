@@ -48,7 +48,7 @@ def make_env(env_id, seed):
         # print('no skew')
         # env = TransformObservation(env, lambda obs: obs.astype("float32"), env.observation_space)
 
-        env = TransformObservation(env, lambda obs: obs.astype("float32"), env.observation_space)
+        env = ObservationTypeConv(env)
         env = gym.wrappers.RecordEpisodeStatistics(env)
         env.action_space.seed(seed)
         return env
@@ -229,6 +229,22 @@ class evaluateCallback(BaseCallback):
             # print('noskew')
             # print(results[-1][-1])
         return True
+    
+class ModifyPolicyCallback(BaseCallback):
+    def __init__(self, verbose=0):
+        super().__init__(verbose)
+
+    def _on_step(self) -> bool:
+        # Check if episode ended
+        if any(self.locals["dones"]):
+            # Modify the policy variable
+            if numpy.random.rand() > self.model.policy.pi_be_ratio:
+                self.model.policy.sampling_mode = 0
+            else:
+                self.model.policy.sampling_mode = 1
+            # print(f"Updated sampling_mode: {self.model.policy.sampling_mode}")
+
+        return True
 
 
 def linear_schedule(init_value: float):
@@ -250,6 +266,7 @@ def main(cfg : DictConfig) -> None:
     # os.makedirs(f'gaussian_{cfg.seed}', exist_ok=True)
 
     checkpoint_callback = CheckpointCallback(save_freq=cfg.TOTAL_TIMESTEPS//100, save_path=f'./checkpoints/seed={cfg.seed}/')
+    pi_be_callback = ModifyPolicyCallback()
     
     if cfg.ENV_NAME == 'LunarLander-v3':
         env = gym.make(cfg.ENV_NAME, continuous=True)
@@ -359,7 +376,9 @@ def main(cfg : DictConfig) -> None:
                     policy_kwargs=OmegaConf.merge(policy_kwargs, cfg.ours_policy_kwargs), 
                     ablation_mode=cfg.ablation_mode,
                     ent_coef=cfg.PARAM, 
+                    gamma=0.9,
                     tensorboard_log=f'.', seed=cfg.seed)
+            print("GAMMA 0.9")
         else:
             if cfg.ENV_NAME == 'BipedalWalker-v3':
                 model = OURS("MlpPolicy", 
@@ -393,7 +412,7 @@ def main(cfg : DictConfig) -> None:
                 # print("DISABLED INITIAL RANDOM PHASE")
             else:
                 assert False, 'INVALID ENV NAME'
-    model.learn(total_timesteps=cfg.TOTAL_TIMESTEPS, callback=[evaluateCallback(cfg), checkpoint_callback])
+    model.learn(total_timesteps=cfg.TOTAL_TIMESTEPS, callback=[evaluateCallback(cfg), checkpoint_callback, pi_be_callback])
     # results.append(evaluate(make_env, "AbsEnv-v0", 1, "ppp", model, skew=10))
 
     # with open(f'gaussian_{seed}/scalars/charts/eval_return', 'w') as f:

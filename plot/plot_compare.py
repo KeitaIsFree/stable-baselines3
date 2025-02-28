@@ -169,6 +169,7 @@ exp_ids = ['AbsEnv-v0-step10-clip-long-OURS-0.001_gauss', 'ablation-AbsEnv-v0-OU
 # exp_ids = ['AbsEnv-v0-extralong-SAC-0.01_gauss', 'AbsEnv-v0-extralong-A2C-0.01_gauss',  'AbsEnv-v0-extralong-OURS-0.01_gauss']
 # exp_ids = ['AbsExploreEnv-v0-OURS-0.001_gauss', 'AbsExploreEnv-v0-OURS-0.001_nf', 'AbsExploreEnv-v0-OURS-0.001_pibe0.0_gauss', 'AbsExploreEnv-v0-OURS-0.001_pibe0.0_nf']
 # exp_ids = ['AbsExploreEnv-v0-OURS-0.001_gauss', 'AbsExploreEnv-v0-OURS-0.001_nf']
+exp_ids = ['ecml/InvertedPendulum-v5-OURS-0.001-pibe-0.2_sb3hyperparams_nf', 'ecml/InvertedPendulum-v5-OURS-0.0001-pibe-0.2_sb3hyperparams_nf', 'ecml/InvertedPendulum-v5-OURS-1e-05-pibe-0.2_sb3hyperparams_nf']
 
 plot_datas = {}
 
@@ -215,30 +216,30 @@ for exp_id in exp_ids:
 
 
 
-# for exp_id in exp_ids:
-#     # plt.plot(x, plot_datas[exp_id]['means']['pi_b'], label=exp_id + '_pi_b')
-#     print(exp_id)
-#     x = numpy.linspace(0, 500000, 100)
-#     if not exp_id == 'thesis/BipedalWalker-v3-PPO-sb3hyperparams_nf':
-#         x = x[:len(plot_datas[exp_id]['means']['pi_eval'])]
-#     else:
-#         x = numpy.linspace(0, 500000, len(plot_datas[exp_id]['means']['pi_eval']))
-#     exp_label = exp_id.split('_')[0].split('-')[-2]
-#     # if exp_label == '0.2':
-#     #     exp_label = 'OURS'
-#     plt.plot(x, plot_datas[exp_id]['means']['pi_eval'], label=exp_label)
-#     # plt.fill_between(x, plot_datas[exp_id]['means']['pi_b'] + plot_datas[exp_id]['stds']['pi_b'], plot_datas[exp_id]['means']['pi_b'] - plot_datas[exp_id]['stds']['pi_b'], alpha=0.1)
-#     plt.fill_between(x, plot_datas[exp_id]['means']['pi_eval'] + plot_datas[exp_id]['stds']['pi_eval'], plot_datas[exp_id]['means']['pi_eval'] - plot_datas[exp_id]['stds']['pi_eval'], alpha=0.1)
+for exp_id in exp_ids:
+    # plt.plot(x, plot_datas[exp_id]['means']['pi_b'], label=exp_id + '_pi_b')
+    print(exp_id)
+    x = numpy.linspace(0, 500000, 100)
+    if not exp_id == 'thesis/BipedalWalker-v3-PPO-sb3hyperparams_nf':
+        x = x[:len(plot_datas[exp_id]['means']['pi_eval'])]
+    else:
+        x = numpy.linspace(0, 500000, len(plot_datas[exp_id]['means']['pi_eval']))
+    exp_label = exp_id.split('_')[0].split('-')[-2]
+    # if exp_label == '0.2':
+    #     exp_label = 'OURS'
+    plt.plot(x, plot_datas[exp_id]['means']['pi_eval'], label=exp_label)
+    # plt.fill_between(x, plot_datas[exp_id]['means']['pi_b'] + plot_datas[exp_id]['stds']['pi_b'], plot_datas[exp_id]['means']['pi_b'] - plot_datas[exp_id]['stds']['pi_b'], alpha=0.1)
+    plt.fill_between(x, plot_datas[exp_id]['means']['pi_eval'] + plot_datas[exp_id]['stds']['pi_eval'], plot_datas[exp_id]['means']['pi_eval'] - plot_datas[exp_id]['stds']['pi_eval'], alpha=0.1)
 
-exp_id = 'AbsEnv-v0-step10-clip-long-OURS-0.001_gauss'
-x = numpy.linspace(0, 100000, len(plot_datas[exp_id]['means']['pi_eval']))
-plt.plot(x, plot_datas[exp_id]['means']['pi_eval'], label='OURS')
-plt.fill_between(x, plot_datas[exp_id]['means']['pi_eval'] + plot_datas[exp_id]['stds']['pi_eval'], plot_datas[exp_id]['means']['pi_eval'] - plot_datas[exp_id]['stds']['pi_eval'], alpha=0.1)
+# exp_id = 'AbsEnv-v0-step10-clip-long-OURS-0.001_gauss'
+# x = numpy.linspace(0, 100000, len(plot_datas[exp_id]['means']['pi_eval']))
+# plt.plot(x, plot_datas[exp_id]['means']['pi_eval'], label='OURS')
+# plt.fill_between(x, plot_datas[exp_id]['means']['pi_eval'] + plot_datas[exp_id]['stds']['pi_eval'], plot_datas[exp_id]['means']['pi_eval'] - plot_datas[exp_id]['stds']['pi_eval'], alpha=0.1)
 
-exp_id = 'ablation-AbsEnv-v0-OURS-0.001_nf'
-x = numpy.linspace(0, 100000, len(plot_datas[exp_id]['means']['pi_eval']))
-plt.plot(x, plot_datas[exp_id]['means']['pi_eval'], label='OURS (pi_e = pi_b)')
-plt.fill_between(x, plot_datas[exp_id]['means']['pi_eval'] + plot_datas[exp_id]['stds']['pi_eval'], plot_datas[exp_id]['means']['pi_eval'] - plot_datas[exp_id]['stds']['pi_eval'], alpha=0.1)
+# exp_id = 'ablation-AbsEnv-v0-OURS-0.001_nf'
+# x = numpy.linspace(0, 100000, len(plot_datas[exp_id]['means']['pi_eval']))
+# plt.plot(x, plot_datas[exp_id]['means']['pi_eval'], label='OURS (pi_e = pi_b)')
+# plt.fill_between(x, plot_datas[exp_id]['means']['pi_eval'] + plot_datas[exp_id]['stds']['pi_eval'], plot_datas[exp_id]['means']['pi_eval'] - plot_datas[exp_id]['stds']['pi_eval'], alpha=0.1)
 
 
 # for exp_id in ['AbsEnv-v0-step10-clip-long-SAC-0.001_gauss', 'redo-AbsEnv-v0-A2C-0.001_nf', 'AbsEnv-v0-step10-clip-long-PPO-0.001_gauss']:

@@ -18,6 +18,7 @@ from stable_baselines3.common.torch_layers import (
     get_actor_critic_arch,
 )
 from stable_baselines3.common.type_aliases import PyTorchObs, Schedule
+import traceback
 
 import numpy
 import normflows
@@ -191,11 +192,13 @@ class NFActor(BasePolicy):
         x = x.type(th.float32)
         try:
             x_t, log_dets = self.model.sample(len(x), context=x)
-        except AssertionError as e:
+        except Exception as e:
             # print('observation: ', x)
             # pass
-            for param in self.model.parameters():
-                print(f"param: {param.data}")
+            print(e)
+            traceback.print_exc()
+            # for param in self.model.parameters():
+            #     print(f"param: {param.data}")
         # mean = None
         # normal = th.distributions.Normal(th.FloatTensor([[0] * self.act_dim] * len(x)), th.FloatTensor([[1] * self.act_dim] * len(x)))
         # x_t = normal.rsample()
@@ -223,14 +226,17 @@ class NFActor(BasePolicy):
         # assert self.flow_type == 'NeuralSpline'
         # # x_t = x_t[:, :self.act_dim]
 
-        # # print('before tanh: ', x_t)
-        # # log_dets += th.sum(2 * th.log(th.cosh(x_t)), 1)
-        x_t_ =  x_t.clone()
+        # print('before tanh: ', x_t)
+        # log_dets += th.sum(2 * th.log(th.cosh(x_t)), 1)
+        #####################################################################
+        x_t_ =  th.clamp(x_t.clone(), -5, 5)
         x_t_2 = th.tanh(x_t_)
         log_dets = log_dets - th.sum(th.log(1 - x_t_2 ** 2), 1)
+        #####################################################################
         # print('after tanh: ', x_t)
         # print(log_dets)
         
+        # x_t_2 = x_t
         return x_t_2, log_dets
 
     def get_log_prob_from_act(self, s, a):
@@ -454,6 +460,7 @@ class OURSPolicy(BasePolicy):
     actor_e: Actor
     critic: ContinuousCritic
     critic_target: ContinuousCritic
+    sampling_mode: 0 # 0 for pi_b, 1 for pi_e
 
     def __init__(
         self,
@@ -627,7 +634,7 @@ class OURSPolicy(BasePolicy):
     def _predict(self, observation: PyTorchObs, deterministic: bool = False) -> th.Tensor:
         if self.ablation_mode:
             return self.actor_b._predict(observation, deterministic)
-        if not deterministic and numpy.random.rand() > self.pi_be_ratio:
+        if not deterministic and self.sampling_mode == 0:
             return self.actor_b._predict(observation)
         else:
             return self.actor_e._predict(observation, True)
