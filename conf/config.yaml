@@ -6,7 +6,7 @@ seed: 1
 
 hyperparams:
   ent_coef: 0.00001
-  gamma: 0.9
+  gamma: 0.99
 
 ours_policy_kwargs:
   use_sde: False
