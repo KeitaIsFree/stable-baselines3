@@ -66,6 +66,7 @@ class NFActor(BasePolicy):
         use_expln: bool = False,
         clip_mean: float = 2.0,
         normalize_images: bool = True,
+        num_flows: int = 4,
         flow_type = 'NeuralSpline'
     ):
         super().__init__(
@@ -86,13 +87,13 @@ class NFActor(BasePolicy):
         self.act_dim = action_dim
 
         # 決め打ち
-        self.state_embedding_layer_sizes= (64, 64)
-        self.state_embedding_dim=action_dim
+        self.state_embedding_layer_sizes= (32, 32)
+        self.state_embedding_dim=4
         # IGNORING EMBEDDING
         obs_dim = get_obs_shape(observation_space)[0]
         # self.state_embedding_dim=obs_dim
         # self.flow_mlp_sizes=(16,16)
-        self.nf_num_flows=4
+        self.nf_num_flows=num_flows
         self.flow_type = flow_type
 
 
@@ -111,7 +112,7 @@ class NFActor(BasePolicy):
         nfs = []
         for i in range(self.nf_num_flows):
             nfs += [normflows.flows.AutoregressiveRationalQuadraticSpline(action_dim, hidden_layers, hidden_units, 
-                                                      num_context_channels=obs_dim)]
+                                                      num_context_channels=self.state_embedding_dim)]
             nfs += [normflows.flows.LULinearPermute(action_dim)]
         # for i in range(self.nf_num_flows):
         #     nfs += [normflows.flows.Planar((2,))]
@@ -125,31 +126,30 @@ class NFActor(BasePolicy):
         #     exit()
         summary(model)
 
-        # s_em = []
-        # for layer_i in range(len(self.state_embedding_layer_sizes) + 1):
-        #     if layer_i == 0:
-        #         s_em.append(nn.Linear(observation_space.shape[0], self.state_embedding_layer_sizes[layer_i]))
-        #     if layer_i == len(self.state_embedding_layer_sizes):
-        #         s_em.append(nn.Linear(self.state_embedding_layer_sizes[layer_i - 1], self.state_embedding_dim))
-        #     else:
-        #         s_em.append(nn.Linear(self.state_embedding_layer_sizes[layer_i - 1], self.state_embedding_layer_sizes[layer_i]))
-        # self.state_embedding = nn.ModuleList(s_em)
+        s_em = []
+        s_em.append(nn.Linear(observation_space.shape[0], self.state_embedding_layer_sizes[0]))
+        s_em.append(nn.ReLU())
+        for layer_i in range(len(self.state_embedding_layer_sizes) - 1):
+            s_em.append(nn.Linear(self.state_embedding_layer_sizes[layer_i - 1], self.state_embedding_layer_sizes[layer_i]))
+            s_em.append(nn.ReLU())
+        s_em.append(nn.Linear(self.state_embedding_layer_sizes[-1], self.state_embedding_dim))
+        self.state_embedding = nn.Sequential(*s_em)
 
-    def generate_random_masks(self, z_dim, num_flows, state_dim):
-        assert num_flows > 1
-        masks = []
-        for flow_i in range(num_flows // 2):
-            arr = numpy.array([0] * (z_dim // 2) + [1] * (z_dim - (z_dim // 2)))
-            numpy.random.shuffle(arr)
-            arr = arr.tolist()
-            masks.append(arr)
-            masks.append([(1 - el) for el in arr])
-        if num_flows % 2 == 1:
-            arr = numpy.array([0] * (z_dim // 2) + [1] * (z_dim - (z_dim // 2)))
-            numpy.random.shuffle(arr)
-            arr = arr.tolist()
-            masks.append(arr)
-        return [th.Tensor(mask + [1] * state_dim) for mask in masks]
+    # def generate_random_masks(self, z_dim, num_flows, state_dim):
+        # assert num_flows > 1
+        # masks = []
+        # for flow_i in range(num_flows // 2):
+        #     arr = numpy.array([0] * (z_dim // 2) + [1] * (z_dim - (z_dim // 2)))
+        #     numpy.random.shuffle(arr)
+        #     arr = arr.tolist()
+        #     masks.append(arr)
+        #     masks.append([(1 - el) for el in arr])
+        # if num_flows % 2 == 1:
+        #     arr = numpy.array([0] * (z_dim // 2) + [1] * (z_dim - (z_dim // 2)))
+        #     numpy.random.shuffle(arr)
+        #     arr = arr.tolist()
+        #     masks.append(arr)
+        # return [th.Tensor(mask + [1] * state_dim) for mask in masks]
 
     def _get_constructor_parameters(self) -> Dict[str, Any]:
         data = super()._get_constructor_parameters()
@@ -189,9 +189,9 @@ class NFActor(BasePolicy):
         pass
 
     def forward(self, x: PyTorchObs, deterministic: bool = False) -> th.Tensor:
-        x = x.type(th.float32)
+        context = self.state_embedding(x.float())
         try:
-            x_t, log_dets = self.model.sample(len(x), context=x)
+            x_t, log_dets = self.model.sample(len(x), context=context)
         except Exception as e:
             # print('observation: ', x)
             # pass
@@ -460,7 +460,6 @@ class OURSPolicy(BasePolicy):
     actor_e: Actor
     critic: ContinuousCritic
     critic_target: ContinuousCritic
-    sampling_mode: 0 # 0 for pi_b, 1 for pi_e
 
     def __init__(
         self,
@@ -483,7 +482,8 @@ class OURSPolicy(BasePolicy):
         share_features_extractor: bool = False,
         pi_be_ratio: float = 0,
         pi_b_nf: bool = True,
-        ablation_mode: bool = False
+        ablation_mode: bool = False,
+        num_flows: int = 4
     ):
         super().__init__(
             observation_space,
@@ -498,6 +498,9 @@ class OURSPolicy(BasePolicy):
         self.ablation_mode = ablation_mode
         self.pi_be_ratio = pi_be_ratio
         self.pi_b_nf = pi_b_nf
+        self.num_flows = num_flows
+
+        self.sampling_mode = 0 # 0 for pi_b, 1 for pi_e
 
         if net_arch is None:
             net_arch = [256, 256]
@@ -620,7 +623,7 @@ class OURSPolicy(BasePolicy):
     def make_actor(self, features_extractor: Optional[BaseFeaturesExtractor] = None, nf: bool = False) -> Actor:
         actor_kwargs = self._update_features_extractor(self.actor_kwargs, features_extractor)
         if nf:
-            return NFActor(**actor_kwargs).to(self.device)
+            return NFActor(**actor_kwargs, num_flows=self.num_flows).to(self.device)
         else:
             return Actor(**actor_kwargs).to(self.device)
 

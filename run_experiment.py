@@ -90,7 +90,7 @@ def evaluate(
     while True:
         with torch.no_grad():
             # actions = numpy.array([(numpy.random.rand() * 2 - 1.0, numpy.random.rand() * 2 - 1.0)])
-            if hasattr(actor, 'actor_e') and not cfg.ablation_mode:
+            if hasattr(actor, 'actor_e') and not cfg.ours_policy_kwargs.ablation_mode:
                 action = actor.actor_e.predict(obs, deterministic=True)[0]
             else:
                 action = actor.predict(obs, deterministic=True)[0]
@@ -279,6 +279,7 @@ def main(cfg : DictConfig) -> None:
 
     env = ObservationTypeConv(env)
 
+    hyperparams = cfg.hyperparams
     
     if cfg.ALGO == 'TD3':
         model = TD3("MlpPolicy", 
@@ -369,49 +370,11 @@ def main(cfg : DictConfig) -> None:
                         tensorboard_log=f'.', seed=cfg.seed)
             print("N_ENVS SET TO 32?")
     elif cfg.ALGO == 'OURS':
-        policy_kwargs = OmegaConf.merge(OmegaConf.create(OmegaConf.to_container(cfg.policy_kwargs)), cfg.ours_policy_kwargs)
-        if not cfg.sb3_hyperparams:
-            model = OURS("MlpPolicy", 
-                    env, device=cfg.DEVICE, 
-                    policy_kwargs=OmegaConf.merge(policy_kwargs, cfg.ours_policy_kwargs), 
-                    ablation_mode=cfg.ablation_mode,
-                    ent_coef=cfg.PARAM, 
-                    gamma=0.9,
-                    tensorboard_log=f'.', seed=cfg.seed)
-            print("GAMMA 0.9")
-        else:
-            if cfg.ENV_NAME == 'BipedalWalker-v3':
-                model = OURS("MlpPolicy", 
-                        env, device=cfg.DEVICE, 
-                        buffer_size=300000,
-                        gamma=0.98,
-                        gradient_steps=64,
-                        learning_rate=0.00073,
-                        learning_starts=10000,
-                        tau=0.02,
-                        train_freq=64,
-                        policy_kwargs=policy_kwargs, 
-                        ablation_mode=cfg.ablation_mode,
-                        ent_coef=cfg.PARAM, 
-                        tensorboard_log=f'.', seed=cfg.seed)
-            elif cfg.ENV_NAME == 'LunarLander-v3':
-                model = OURS("MlpPolicy", 
-                            env, device=cfg.DEVICE, 
-                            batch_size=256,
-                            buffer_size=1000000,
-                            ablation_mode=cfg.ablation_mode,
-                            ent_coef=cfg.PARAM,
-                            gamma=0.99,
-                            gradient_steps=1,
-                            learning_rate=linear_schedule(7.3e-4),
-                            # policy_kwargs=dict(lr_schedule_pi_b=linear_schedule(7.3e-6)),
-                            # learning_starts=10000,
-                            tau=0.01,
-                            train_freq=1,
-                            tensorboard_log=f'.', seed=cfg.seed)
-                # print("DISABLED INITIAL RANDOM PHASE")
-            else:
-                assert False, 'INVALID ENV NAME'
+        model = OURS("MlpPolicy", 
+                env, device=cfg.DEVICE, 
+                policy_kwargs=cfg.ours_policy_kwargs, 
+                **cfg.hyperparams,
+                tensorboard_log=f'.', seed=cfg.seed)
     model.learn(total_timesteps=cfg.TOTAL_TIMESTEPS, callback=[evaluateCallback(cfg), checkpoint_callback, pi_be_callback])
     # results.append(evaluate(make_env, "AbsEnv-v0", 1, "ppp", model, skew=10))
 

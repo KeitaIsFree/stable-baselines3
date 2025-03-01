@@ -91,40 +91,6 @@ Total params: 284,772
 Trainable params: 284,772
 Non-trainable params: 0
 ===============================================================================================
-GAMMA 0.9
-===============================================================================================
-Layer (type:depth-idx)                                                 Param #
-===============================================================================================
-ConditionalNormalizingFlow                                             --
-├─DiagGaussian: 1-1                                                    --
-├─ModuleList: 1-2                                                      --
-│    └─AutoregressiveRationalQuadraticSpline: 2-1                      --
-│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-1        71,191
-│    └─LULinearPermute: 2-2                                            --
-│    │    └─_RandomPermutation: 3-2                                    --
-│    │    └─_LULinear: 3-3                                             2
-│    └─AutoregressiveRationalQuadraticSpline: 2-3                      --
-│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-4        71,191
-│    └─LULinearPermute: 2-4                                            --
-│    │    └─_RandomPermutation: 3-5                                    --
-│    │    └─_LULinear: 3-6                                             2
-│    └─AutoregressiveRationalQuadraticSpline: 2-5                      --
-│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-7        71,191
-│    └─LULinearPermute: 2-6                                            --
-│    │    └─_RandomPermutation: 3-8                                    --
-│    │    └─_LULinear: 3-9                                             2
-│    └─AutoregressiveRationalQuadraticSpline: 2-7                      --
-│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-10       71,191
-│    └─LULinearPermute: 2-8                                            --
-│    │    └─_RandomPermutation: 3-11                                   --
-│    │    └─_LULinear: 3-12                                            2
-===============================================================================================
-Total params: 284,772
-Trainable params: 284,772
-Non-trainable params: 0
-===============================================================================================
-GAMMA 0.9
-GAMMA 0.9
 ===============================================================================================
 Layer (type:depth-idx)                                                 Param #
 ===============================================================================================
@@ -218,7 +184,6 @@ Total params: 284,772
 Trainable params: 284,772
 Non-trainable params: 0
 ===============================================================================================
-GAMMA 0.9
 ===============================================================================================
 Layer (type:depth-idx)                                                 Param #
 ===============================================================================================
@@ -312,53 +277,936 @@ Total params: 284,772
 Trainable params: 284,772
 Non-trainable params: 0
 ===============================================================================================
-GAMMA 0.9
-GAMMA 0.9
-GAMMA 0.9
-GAMMA 0.9
-GAMMA 0.9
-GAMMA 0.9
+===============================================================================================
+Layer (type:depth-idx)                                                 Param #
+===============================================================================================
+ConditionalNormalizingFlow                                             --
+├─DiagGaussian: 1-1                                                    --
+├─ModuleList: 1-2                                                      --
+│    └─AutoregressiveRationalQuadraticSpline: 2-1                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-1        71,191
+│    └─LULinearPermute: 2-2                                            --
+│    │    └─_RandomPermutation: 3-2                                    --
+│    │    └─_LULinear: 3-3                                             2
+│    └─AutoregressiveRationalQuadraticSpline: 2-3                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-4        71,191
+│    └─LULinearPermute: 2-4                                            --
+│    │    └─_RandomPermutation: 3-5                                    --
+│    │    └─_LULinear: 3-6                                             2
+│    └─AutoregressiveRationalQuadraticSpline: 2-5                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-7        71,191
+│    └─LULinearPermute: 2-6                                            --
+│    │    └─_RandomPermutation: 3-8                                    --
+│    │    └─_LULinear: 3-9                                             2
+│    └─AutoregressiveRationalQuadraticSpline: 2-7                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-10       71,191
+│    └─LULinearPermute: 2-8                                            --
+│    │    └─_RandomPermutation: 3-11                                   --
+│    │    └─_LULinear: 3-12                                            2
+===============================================================================================
+Total params: 284,772
+Trainable params: 284,772
+Non-trainable params: 0
+===============================================================================================
 
-Error executing job with overrides: ['seed=10', 'DEVICE=cuda:2', 'PARAM=1e-5']
 Traceback (most recent call last):
-  File "/data01/keitas/Code/stable-baselines3/run_experiment.py", line 415, in main
-    model.learn(total_timesteps=cfg.TOTAL_TIMESTEPS, callback=[evaluateCallback(cfg), checkpoint_callback, pi_be_callback])
-  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/ours.py", line 305, in learn
-    return super().learn(
-  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 347, in learn
-    self.train(batch_size=self.batch_size, gradient_steps=gradient_steps)
-  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/ours.py", line 200, in train
-    actions_pi, log_prob = self.actor_b.action_log_prob(replay_data.observations)
-  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/policies.py", line 247, in action_log_prob
-    mean_actions, log_std = self(obs)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/policies.py", line 194, in forward
+    x_t, log_dets = self.model.sample(len(x), context=context)
+  File "/home/keitas/anaconda3/envs/eac/lib/python3.9/site-packages/normflows/core.py", line 298, in sample
+    z, log_det = flow(z, context=context)
   File "/home/keitas/anaconda3/envs/eac/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
     return self._call_impl(*args, **kwargs)
   File "/home/keitas/anaconda3/envs/eac/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
     return forward_call(*args, **kwargs)
-  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/policies.py", line 230, in forward
-    x_t_ =  th.clamp(x_t.clone(), -5, 5)
-UnboundLocalError: local variable 'x_t' referenced before assignment
-
-Set the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.
-
-Error executing job with overrides: ['seed=6', 'DEVICE=cuda:2', 'PARAM=1e-5']
+  File "/home/keitas/anaconda3/envs/eac/lib/python3.9/site-packages/normflows/flows/neural_spline/wrapper.py", line 231, in forward
+    z, log_det = self.mprqat.inverse(z, context=context)
+  File "/home/keitas/anaconda3/envs/eac/lib/python3.9/site-packages/normflows/flows/affine/autoregressive.py", line 35, in inverse
+    outputs, logabsdet = self._elementwise_inverse(
+  File "/home/keitas/anaconda3/envs/eac/lib/python3.9/site-packages/normflows/flows/neural_spline/autoregressive.py", line 134, in _elementwise_inverse
+    return self._elementwise(inputs, autoregressive_params, inverse=True)
+  File "/home/keitas/anaconda3/envs/eac/lib/python3.9/site-packages/normflows/flows/neural_spline/autoregressive.py", line 116, in _elementwise
+    outputs, logabsdet = spline_fn(
+  File "/home/keitas/anaconda3/envs/eac/lib/python3.9/site-packages/normflows/utils/splines.py", line 76, in unconstrained_rational_quadratic_spline
+    ) = rational_quadratic_spline(
+  File "/home/keitas/anaconda3/envs/eac/lib/python3.9/site-packages/normflows/utils/splines.py", line 181, in rational_quadratic_spline
+    assert (discriminant >= 0).all()
+AssertionError
+Error executing job with overrides: ['seed=3', 'DEVICE=cuda:2', 'hyperparams.ent_coef=1e-5', 'EXP_NAME=${_EXP_NAME}_1e-5']
 Traceback (most recent call last):
-  File "/data01/keitas/Code/stable-baselines3/run_experiment.py", line 415, in main
+  File "/data01/keitas/Code/stable-baselines3/run_experiment.py", line 378, in main
     model.learn(total_timesteps=cfg.TOTAL_TIMESTEPS, callback=[evaluateCallback(cfg), checkpoint_callback, pi_be_callback])
   File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/ours.py", line 305, in learn
     return super().learn(
-  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 347, in learn
-    self.train(batch_size=self.batch_size, gradient_steps=gradient_steps)
-  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/ours.py", line 200, in train
-    actions_pi, log_prob = self.actor_b.action_log_prob(replay_data.observations)
-  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/policies.py", line 247, in action_log_prob
-    mean_actions, log_std = self(obs)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 328, in learn
+    rollout = self.collect_rollouts(
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 557, in collect_rollouts
+    actions, buffer_actions = self._sample_action(learning_starts, action_noise, env.num_envs)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 390, in _sample_action
+    unscaled_action, _ = self.predict(self._last_obs, deterministic=False)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/base_class.py", line 557, in predict
+    return self.policy.predict(observation, state, episode_start, deterministic)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/policies.py", line 368, in predict
+    actions = self._predict(obs_tensor, deterministic=deterministic)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/policies.py", line 640, in _predict
+    return self.actor_b._predict(observation)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/policies.py", line 255, in _predict
+    a = self(observation)[0]
   File "/home/keitas/anaconda3/envs/eac/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1739, in _wrapped_call_impl
     return self._call_impl(*args, **kwargs)
   File "/home/keitas/anaconda3/envs/eac/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1750, in _call_impl
     return forward_call(*args, **kwargs)
-  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/policies.py", line 230, in forward
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/policies.py", line 232, in forward
     x_t_ =  th.clamp(x_t.clone(), -5, 5)
 UnboundLocalError: local variable 'x_t' referenced before assignment
 
 Set the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.
+===============================================================================================
+Layer (type:depth-idx)                                                 Param #
+===============================================================================================
+ConditionalNormalizingFlow                                             --
+├─DiagGaussian: 1-1                                                    --
+├─ModuleList: 1-2                                                      --
+│    └─AutoregressiveRationalQuadraticSpline: 2-1                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-1        74,286
+│    └─LULinearPermute: 2-2                                            --
+│    │    └─_RandomPermutation: 3-2                                    --
+│    │    └─_LULinear: 3-3                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-3                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-4        74,286
+│    └─LULinearPermute: 2-4                                            --
+│    │    └─_RandomPermutation: 3-5                                    --
+│    │    └─_LULinear: 3-6                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-5                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-7        74,286
+│    └─LULinearPermute: 2-6                                            --
+│    │    └─_RandomPermutation: 3-8                                    --
+│    │    └─_LULinear: 3-9                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-7                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-10       74,286
+│    └─LULinearPermute: 2-8                                            --
+│    │    └─_RandomPermutation: 3-11                                   --
+│    │    └─_LULinear: 3-12                                            6
+===============================================================================================
+Total params: 297,168
+Trainable params: 297,168
+Non-trainable params: 0
+===============================================================================================
+===============================================================================================
+Layer (type:depth-idx)                                                 Param #
+===============================================================================================
+ConditionalNormalizingFlow                                             --
+├─DiagGaussian: 1-1                                                    --
+├─ModuleList: 1-2                                                      --
+│    └─AutoregressiveRationalQuadraticSpline: 2-1                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-1        74,286
+│    └─LULinearPermute: 2-2                                            --
+│    │    └─_RandomPermutation: 3-2                                    --
+│    │    └─_LULinear: 3-3                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-3                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-4        74,286
+│    └─LULinearPermute: 2-4                                            --
+│    │    └─_RandomPermutation: 3-5                                    --
+│    │    └─_LULinear: 3-6                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-5                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-7        74,286
+│    └─LULinearPermute: 2-6                                            --
+│    │    └─_RandomPermutation: 3-8                                    --
+│    │    └─_LULinear: 3-9                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-7                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-10       74,286
+│    └─LULinearPermute: 2-8                                            --
+│    │    └─_RandomPermutation: 3-11                                   --
+│    │    └─_LULinear: 3-12                                            6
+===============================================================================================
+Total params: 297,168
+Trainable params: 297,168
+Non-trainable params: 0
+===============================================================================================
+===============================================================================================
+Layer (type:depth-idx)                                                 Param #
+===============================================================================================
+ConditionalNormalizingFlow                                             --
+├─DiagGaussian: 1-1                                                    --
+├─ModuleList: 1-2                                                      --
+│    └─AutoregressiveRationalQuadraticSpline: 2-1                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-1        74,286
+│    └─LULinearPermute: 2-2                                            --
+│    │    └─_RandomPermutation: 3-2                                    --
+│    │    └─_LULinear: 3-3                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-3                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-4        74,286
+│    └─LULinearPermute: 2-4                                            --
+│    │    └─_RandomPermutation: 3-5                                    --
+│    │    └─_LULinear: 3-6                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-5                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-7        74,286
+│    └─LULinearPermute: 2-6                                            --
+│    │    └─_RandomPermutation: 3-8                                    --
+│    │    └─_LULinear: 3-9                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-7                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-10       74,286
+│    └─LULinearPermute: 2-8                                            --
+│    │    └─_RandomPermutation: 3-11                                   --
+│    │    └─_LULinear: 3-12                                            6
+===============================================================================================
+Total params: 297,168
+Trainable params: 297,168
+Non-trainable params: 0
+===============================================================================================
+Error executing job with overrides: ['seed=8', 'DEVICE=cuda:2', 'hyperparams.ent_coef=1e-5', 'EXP_NAME=${_EXP_NAME}_1e-5']
+Traceback (most recent call last):
+  File "/data01/keitas/Code/stable-baselines3/run_experiment.py", line 378, in main
+    model.learn(total_timesteps=cfg.TOTAL_TIMESTEPS, callback=[evaluateCallback(cfg), checkpoint_callback, pi_be_callback])
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/ours.py", line 305, in learn
+    return super().learn(
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 328, in learn
+    rollout = self.collect_rollouts(
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 557, in collect_rollouts
+    actions, buffer_actions = self._sample_action(learning_starts, action_noise, env.num_envs)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 390, in _sample_action
+    unscaled_action, _ = self.predict(self._last_obs, deterministic=False)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/base_class.py", line 557, in predict
+    return self.policy.predict(observation, state, episode_start, deterministic)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/policies.py", line 368, in predict
+    actions = self._predict(obs_tensor, deterministic=deterministic)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/policies.py", line 639, in _predict
+    if not deterministic and self.sampling_mode == 0:
+  File "/home/keitas/anaconda3/envs/eac/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1928, in __getattr__
+    raise AttributeError(
+AttributeError: 'OURSPolicy' object has no attribute 'sampling_mode'
+
+Set the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.
+===============================================================================================
+Layer (type:depth-idx)                                                 Param #
+===============================================================================================
+ConditionalNormalizingFlow                                             --
+├─DiagGaussian: 1-1                                                    --
+├─ModuleList: 1-2                                                      --
+│    └─AutoregressiveRationalQuadraticSpline: 2-1                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-1        74,286
+│    └─LULinearPermute: 2-2                                            --
+│    │    └─_RandomPermutation: 3-2                                    --
+│    │    └─_LULinear: 3-3                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-3                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-4        74,286
+│    └─LULinearPermute: 2-4                                            --
+│    │    └─_RandomPermutation: 3-5                                    --
+│    │    └─_LULinear: 3-6                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-5                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-7        74,286
+│    └─LULinearPermute: 2-6                                            --
+│    │    └─_RandomPermutation: 3-8                                    --
+│    │    └─_LULinear: 3-9                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-7                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-10       74,286
+│    └─LULinearPermute: 2-8                                            --
+│    │    └─_RandomPermutation: 3-11                                   --
+│    │    └─_LULinear: 3-12                                            6
+===============================================================================================
+Total params: 297,168
+Trainable params: 297,168
+Non-trainable params: 0
+===============================================================================================
+Error executing job with overrides: ['seed=10', 'DEVICE=cuda:2', 'hyperparams.ent_coef=1e-5', 'EXP_NAME=${_EXP_NAME}_1e-5']
+Traceback (most recent call last):
+  File "/data01/keitas/Code/stable-baselines3/run_experiment.py", line 378, in main
+    model.learn(total_timesteps=cfg.TOTAL_TIMESTEPS, callback=[evaluateCallback(cfg), checkpoint_callback, pi_be_callback])
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/ours.py", line 305, in learn
+    return super().learn(
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 328, in learn
+    rollout = self.collect_rollouts(
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 557, in collect_rollouts
+    actions, buffer_actions = self._sample_action(learning_starts, action_noise, env.num_envs)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 390, in _sample_action
+    unscaled_action, _ = self.predict(self._last_obs, deterministic=False)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/base_class.py", line 557, in predict
+    return self.policy.predict(observation, state, episode_start, deterministic)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/policies.py", line 368, in predict
+    actions = self._predict(obs_tensor, deterministic=deterministic)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/policies.py", line 639, in _predict
+    if not deterministic and self.sampling_mode == 0:
+  File "/home/keitas/anaconda3/envs/eac/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1928, in __getattr__
+    raise AttributeError(
+AttributeError: 'OURSPolicy' object has no attribute 'sampling_mode'
+
+Set the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.
+===============================================================================================
+Layer (type:depth-idx)                                                 Param #
+===============================================================================================
+ConditionalNormalizingFlow                                             --
+├─DiagGaussian: 1-1                                                    --
+├─ModuleList: 1-2                                                      --
+│    └─AutoregressiveRationalQuadraticSpline: 2-1                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-1        74,286
+│    └─LULinearPermute: 2-2                                            --
+│    │    └─_RandomPermutation: 3-2                                    --
+│    │    └─_LULinear: 3-3                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-3                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-4        74,286
+│    └─LULinearPermute: 2-4                                            --
+│    │    └─_RandomPermutation: 3-5                                    --
+│    │    └─_LULinear: 3-6                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-5                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-7        74,286
+│    └─LULinearPermute: 2-6                                            --
+│    │    └─_RandomPermutation: 3-8                                    --
+│    │    └─_LULinear: 3-9                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-7                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-10       74,286
+│    └─LULinearPermute: 2-8                                            --
+│    │    └─_RandomPermutation: 3-11                                   --
+│    │    └─_LULinear: 3-12                                            6
+===============================================================================================
+Total params: 297,168
+Trainable params: 297,168
+Non-trainable params: 0
+===============================================================================================
+===============================================================================================
+Layer (type:depth-idx)                                                 Param #
+===============================================================================================
+ConditionalNormalizingFlow                                             --
+├─DiagGaussian: 1-1                                                    --
+├─ModuleList: 1-2                                                      --
+│    └─AutoregressiveRationalQuadraticSpline: 2-1                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-1        74,286
+│    └─LULinearPermute: 2-2                                            --
+│    │    └─_RandomPermutation: 3-2                                    --
+│    │    └─_LULinear: 3-3                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-3                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-4        74,286
+│    └─LULinearPermute: 2-4                                            --
+│    │    └─_RandomPermutation: 3-5                                    --
+│    │    └─_LULinear: 3-6                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-5                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-7        74,286
+│    └─LULinearPermute: 2-6                                            --
+│    │    └─_RandomPermutation: 3-8                                    --
+│    │    └─_LULinear: 3-9                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-7                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-10       74,286
+│    └─LULinearPermute: 2-8                                            --
+│    │    └─_RandomPermutation: 3-11                                   --
+│    │    └─_LULinear: 3-12                                            6
+===============================================================================================
+Total params: 297,168
+Trainable params: 297,168
+Non-trainable params: 0
+===============================================================================================
+===============================================================================================
+Layer (type:depth-idx)                                                 Param #
+===============================================================================================
+ConditionalNormalizingFlow                                             --
+├─DiagGaussian: 1-1                                                    --
+├─ModuleList: 1-2                                                      --
+│    └─AutoregressiveRationalQuadraticSpline: 2-1                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-1        74,286
+│    └─LULinearPermute: 2-2                                            --
+│    │    └─_RandomPermutation: 3-2                                    --
+│    │    └─_LULinear: 3-3                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-3                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-4        74,286
+│    └─LULinearPermute: 2-4                                            --
+│    │    └─_RandomPermutation: 3-5                                    --
+│    │    └─_LULinear: 3-6                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-5                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-7        74,286
+│    └─LULinearPermute: 2-6                                            --
+│    │    └─_RandomPermutation: 3-8                                    --
+│    │    └─_LULinear: 3-9                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-7                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-10       74,286
+│    └─LULinearPermute: 2-8                                            --
+│    │    └─_RandomPermutation: 3-11                                   --
+│    │    └─_LULinear: 3-12                                            6
+===============================================================================================
+Total params: 297,168
+Trainable params: 297,168
+Non-trainable params: 0
+===============================================================================================
+===============================================================================================
+Layer (type:depth-idx)                                                 Param #
+===============================================================================================
+ConditionalNormalizingFlow                                             --
+├─DiagGaussian: 1-1                                                    --
+├─ModuleList: 1-2                                                      --
+│    └─AutoregressiveRationalQuadraticSpline: 2-1                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-1        74,286
+│    └─LULinearPermute: 2-2                                            --
+│    │    └─_RandomPermutation: 3-2                                    --
+│    │    └─_LULinear: 3-3                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-3                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-4        74,286
+│    └─LULinearPermute: 2-4                                            --
+│    │    └─_RandomPermutation: 3-5                                    --
+│    │    └─_LULinear: 3-6                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-5                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-7        74,286
+│    └─LULinearPermute: 2-6                                            --
+│    │    └─_RandomPermutation: 3-8                                    --
+│    │    └─_LULinear: 3-9                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-7                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-10       74,286
+│    └─LULinearPermute: 2-8                                            --
+│    │    └─_RandomPermutation: 3-11                                   --
+│    │    └─_LULinear: 3-12                                            6
+===============================================================================================
+Total params: 297,168
+Trainable params: 297,168
+Non-trainable params: 0
+===============================================================================================
+===============================================================================================
+Layer (type:depth-idx)                                                 Param #
+===============================================================================================
+ConditionalNormalizingFlow                                             --
+├─DiagGaussian: 1-1                                                    --
+├─ModuleList: 1-2                                                      --
+│    └─AutoregressiveRationalQuadraticSpline: 2-1                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-1        74,286
+│    └─LULinearPermute: 2-2                                            --
+│    │    └─_RandomPermutation: 3-2                                    --
+│    │    └─_LULinear: 3-3                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-3                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-4        74,286
+│    └─LULinearPermute: 2-4                                            --
+│    │    └─_RandomPermutation: 3-5                                    --
+│    │    └─_LULinear: 3-6                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-5                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-7        74,286
+│    └─LULinearPermute: 2-6                                            --
+│    │    └─_RandomPermutation: 3-8                                    --
+│    │    └─_LULinear: 3-9                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-7                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-10       74,286
+│    └─LULinearPermute: 2-8                                            --
+│    │    └─_RandomPermutation: 3-11                                   --
+│    │    └─_LULinear: 3-12                                            6
+===============================================================================================
+Total params: 297,168
+Trainable params: 297,168
+Non-trainable params: 0
+===============================================================================================
+===============================================================================================
+Layer (type:depth-idx)                                                 Param #
+===============================================================================================
+ConditionalNormalizingFlow                                             --
+├─DiagGaussian: 1-1                                                    --
+├─ModuleList: 1-2                                                      --
+│    └─AutoregressiveRationalQuadraticSpline: 2-1                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-1        74,286
+│    └─LULinearPermute: 2-2                                            --
+│    │    └─_RandomPermutation: 3-2                                    --
+│    │    └─_LULinear: 3-3                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-3                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-4        74,286
+│    └─LULinearPermute: 2-4                                            --
+│    │    └─_RandomPermutation: 3-5                                    --
+│    │    └─_LULinear: 3-6                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-5                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-7        74,286
+│    └─LULinearPermute: 2-6                                            --
+│    │    └─_RandomPermutation: 3-8                                    --
+│    │    └─_LULinear: 3-9                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-7                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-10       74,286
+│    └─LULinearPermute: 2-8                                            --
+│    │    └─_RandomPermutation: 3-11                                   --
+│    │    └─_LULinear: 3-12                                            6
+===============================================================================================
+Total params: 297,168
+Trainable params: 297,168
+Non-trainable params: 0
+===============================================================================================
+Error executing job with overrides: ['seed=1', 'DEVICE=cuda:2', 'hyperparams.ent_coef=1e-5', 'EXP_NAME=${_EXP_NAME}_1e-5']
+Traceback (most recent call last):
+  File "/data01/keitas/Code/stable-baselines3/run_experiment.py", line 378, in main
+    model.learn(total_timesteps=cfg.TOTAL_TIMESTEPS, callback=[evaluateCallback(cfg), checkpoint_callback, pi_be_callback])
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/ours.py", line 305, in learn
+    return super().learn(
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 328, in learn
+    rollout = self.collect_rollouts(
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 557, in collect_rollouts
+    actions, buffer_actions = self._sample_action(learning_starts, action_noise, env.num_envs)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 390, in _sample_action
+    unscaled_action, _ = self.predict(self._last_obs, deterministic=False)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/base_class.py", line 557, in predict
+    return self.policy.predict(observation, state, episode_start, deterministic)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/policies.py", line 368, in predict
+    actions = self._predict(obs_tensor, deterministic=deterministic)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/policies.py", line 639, in _predict
+    if not deterministic and self.sampling_mode == 0:
+  File "/home/keitas/anaconda3/envs/eac/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1928, in __getattr__
+    raise AttributeError(
+AttributeError: 'OURSPolicy' object has no attribute 'sampling_mode'
+
+Set the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.
+Error executing job with overrides: ['seed=4', 'DEVICE=cuda:2', 'hyperparams.ent_coef=1e-5', 'EXP_NAME=${_EXP_NAME}_1e-5']
+Traceback (most recent call last):
+  File "/data01/keitas/Code/stable-baselines3/run_experiment.py", line 378, in main
+    model.learn(total_timesteps=cfg.TOTAL_TIMESTEPS, callback=[evaluateCallback(cfg), checkpoint_callback, pi_be_callback])
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/ours.py", line 305, in learn
+    return super().learn(
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 328, in learn
+    rollout = self.collect_rollouts(
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 557, in collect_rollouts
+    actions, buffer_actions = self._sample_action(learning_starts, action_noise, env.num_envs)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 390, in _sample_action
+    unscaled_action, _ = self.predict(self._last_obs, deterministic=False)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/base_class.py", line 557, in predict
+    return self.policy.predict(observation, state, episode_start, deterministic)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/policies.py", line 368, in predict
+    actions = self._predict(obs_tensor, deterministic=deterministic)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/policies.py", line 639, in _predict
+    if not deterministic and self.sampling_mode == 0:
+  File "/home/keitas/anaconda3/envs/eac/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1928, in __getattr__
+    raise AttributeError(
+AttributeError: 'OURSPolicy' object has no attribute 'sampling_mode'
+
+Set the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.
+Error executing job with overrides: ['seed=2', 'DEVICE=cuda:2', 'hyperparams.ent_coef=1e-5', 'EXP_NAME=${_EXP_NAME}_1e-5']
+Traceback (most recent call last):
+  File "/data01/keitas/Code/stable-baselines3/run_experiment.py", line 378, in main
+    model.learn(total_timesteps=cfg.TOTAL_TIMESTEPS, callback=[evaluateCallback(cfg), checkpoint_callback, pi_be_callback])
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/ours.py", line 305, in learn
+    return super().learn(
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 328, in learn
+    rollout = self.collect_rollouts(
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 557, in collect_rollouts
+    actions, buffer_actions = self._sample_action(learning_starts, action_noise, env.num_envs)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 390, in _sample_action
+    unscaled_action, _ = self.predict(self._last_obs, deterministic=False)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/base_class.py", line 557, in predict
+    return self.policy.predict(observation, state, episode_start, deterministic)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/policies.py", line 368, in predict
+    actions = self._predict(obs_tensor, deterministic=deterministic)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/policies.py", line 639, in _predict
+    if not deterministic and self.sampling_mode == 0:
+  File "/home/keitas/anaconda3/envs/eac/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1928, in __getattr__
+    raise AttributeError(
+AttributeError: 'OURSPolicy' object has no attribute 'sampling_mode'
+
+Set the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.
+Error executing job with overrides: ['seed=7', 'DEVICE=cuda:2', 'hyperparams.ent_coef=1e-5', 'EXP_NAME=${_EXP_NAME}_1e-5']
+Traceback (most recent call last):
+  File "/data01/keitas/Code/stable-baselines3/run_experiment.py", line 378, in main
+    model.learn(total_timesteps=cfg.TOTAL_TIMESTEPS, callback=[evaluateCallback(cfg), checkpoint_callback, pi_be_callback])
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/ours.py", line 305, in learn
+    return super().learn(
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 328, in learn
+    rollout = self.collect_rollouts(
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 557, in collect_rollouts
+    actions, buffer_actions = self._sample_action(learning_starts, action_noise, env.num_envs)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 390, in _sample_action
+    unscaled_action, _ = self.predict(self._last_obs, deterministic=False)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/base_class.py", line 557, in predict
+    return self.policy.predict(observation, state, episode_start, deterministic)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/policies.py", line 368, in predict
+    actions = self._predict(obs_tensor, deterministic=deterministic)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/policies.py", line 639, in _predict
+    if not deterministic and self.sampling_mode == 0:
+  File "/home/keitas/anaconda3/envs/eac/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1928, in __getattr__
+    raise AttributeError(
+AttributeError: 'OURSPolicy' object has no attribute 'sampling_mode'
+
+Set the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.
+Error executing job with overrides: ['seed=3', 'DEVICE=cuda:2', 'hyperparams.ent_coef=1e-5', 'EXP_NAME=${_EXP_NAME}_1e-5']
+Traceback (most recent call last):
+  File "/data01/keitas/Code/stable-baselines3/run_experiment.py", line 378, in main
+    model.learn(total_timesteps=cfg.TOTAL_TIMESTEPS, callback=[evaluateCallback(cfg), checkpoint_callback, pi_be_callback])
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/ours.py", line 305, in learn
+    return super().learn(
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 328, in learn
+    rollout = self.collect_rollouts(
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 557, in collect_rollouts
+    actions, buffer_actions = self._sample_action(learning_starts, action_noise, env.num_envs)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 390, in _sample_action
+    unscaled_action, _ = self.predict(self._last_obs, deterministic=False)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/base_class.py", line 557, in predict
+    return self.policy.predict(observation, state, episode_start, deterministic)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/policies.py", line 368, in predict
+    actions = self._predict(obs_tensor, deterministic=deterministic)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/policies.py", line 639, in _predict
+    if not deterministic and self.sampling_mode == 0:
+  File "/home/keitas/anaconda3/envs/eac/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1928, in __getattr__
+    raise AttributeError(
+AttributeError: 'OURSPolicy' object has no attribute 'sampling_mode'
+
+Set the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.
+Error executing job with overrides: ['seed=5', 'DEVICE=cuda:2', 'hyperparams.ent_coef=1e-5', 'EXP_NAME=${_EXP_NAME}_1e-5']
+Traceback (most recent call last):
+  File "/data01/keitas/Code/stable-baselines3/run_experiment.py", line 378, in main
+    model.learn(total_timesteps=cfg.TOTAL_TIMESTEPS, callback=[evaluateCallback(cfg), checkpoint_callback, pi_be_callback])
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/ours.py", line 305, in learn
+    return super().learn(
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 328, in learn
+    rollout = self.collect_rollouts(
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 557, in collect_rollouts
+    actions, buffer_actions = self._sample_action(learning_starts, action_noise, env.num_envs)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 390, in _sample_action
+    unscaled_action, _ = self.predict(self._last_obs, deterministic=False)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/base_class.py", line 557, in predict
+    return self.policy.predict(observation, state, episode_start, deterministic)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/policies.py", line 368, in predict
+    actions = self._predict(obs_tensor, deterministic=deterministic)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/policies.py", line 639, in _predict
+    if not deterministic and self.sampling_mode == 0:
+  File "/home/keitas/anaconda3/envs/eac/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1928, in __getattr__
+    raise AttributeError(
+AttributeError: 'OURSPolicy' object has no attribute 'sampling_mode'
+
+Set the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.
+Error executing job with overrides: ['seed=6', 'DEVICE=cuda:2', 'hyperparams.ent_coef=1e-5', 'EXP_NAME=${_EXP_NAME}_1e-5']
+Traceback (most recent call last):
+  File "/data01/keitas/Code/stable-baselines3/run_experiment.py", line 378, in main
+    model.learn(total_timesteps=cfg.TOTAL_TIMESTEPS, callback=[evaluateCallback(cfg), checkpoint_callback, pi_be_callback])
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/ours.py", line 305, in learn
+    return super().learn(
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 328, in learn
+    rollout = self.collect_rollouts(
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 557, in collect_rollouts
+    actions, buffer_actions = self._sample_action(learning_starts, action_noise, env.num_envs)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 390, in _sample_action
+    unscaled_action, _ = self.predict(self._last_obs, deterministic=False)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/base_class.py", line 557, in predict
+    return self.policy.predict(observation, state, episode_start, deterministic)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/policies.py", line 368, in predict
+    actions = self._predict(obs_tensor, deterministic=deterministic)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/policies.py", line 639, in _predict
+    if not deterministic and self.sampling_mode == 0:
+  File "/home/keitas/anaconda3/envs/eac/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1928, in __getattr__
+    raise AttributeError(
+AttributeError: 'OURSPolicy' object has no attribute 'sampling_mode'
+
+Set the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.
+Error executing job with overrides: ['seed=9', 'DEVICE=cuda:2', 'hyperparams.ent_coef=1e-5', 'EXP_NAME=${_EXP_NAME}_1e-5']
+Traceback (most recent call last):
+  File "/data01/keitas/Code/stable-baselines3/run_experiment.py", line 378, in main
+    model.learn(total_timesteps=cfg.TOTAL_TIMESTEPS, callback=[evaluateCallback(cfg), checkpoint_callback, pi_be_callback])
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/ours.py", line 305, in learn
+    return super().learn(
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 328, in learn
+    rollout = self.collect_rollouts(
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 557, in collect_rollouts
+    actions, buffer_actions = self._sample_action(learning_starts, action_noise, env.num_envs)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/off_policy_algorithm.py", line 390, in _sample_action
+    unscaled_action, _ = self.predict(self._last_obs, deterministic=False)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/base_class.py", line 557, in predict
+    return self.policy.predict(observation, state, episode_start, deterministic)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/common/policies.py", line 368, in predict
+    actions = self._predict(obs_tensor, deterministic=deterministic)
+  File "/data01/keitas/Code/stable-baselines3/stable_baselines3/ours/policies.py", line 639, in _predict
+    if not deterministic and self.sampling_mode == 0:
+  File "/home/keitas/anaconda3/envs/eac/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1928, in __getattr__
+    raise AttributeError(
+AttributeError: 'OURSPolicy' object has no attribute 'sampling_mode'
+
+Set the environment variable HYDRA_FULL_ERROR=1 for a complete stack trace.
+===============================================================================================
+Layer (type:depth-idx)                                                 Param #
+===============================================================================================
+ConditionalNormalizingFlow                                             --
+├─DiagGaussian: 1-1                                                    --
+├─ModuleList: 1-2                                                      --
+│    └─AutoregressiveRationalQuadraticSpline: 2-1                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-1        74,286
+│    └─LULinearPermute: 2-2                                            --
+│    │    └─_RandomPermutation: 3-2                                    --
+│    │    └─_LULinear: 3-3                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-3                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-4        74,286
+│    └─LULinearPermute: 2-4                                            --
+│    │    └─_RandomPermutation: 3-5                                    --
+│    │    └─_LULinear: 3-6                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-5                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-7        74,286
+│    └─LULinearPermute: 2-6                                            --
+│    │    └─_RandomPermutation: 3-8                                    --
+│    │    └─_LULinear: 3-9                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-7                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-10       74,286
+│    └─LULinearPermute: 2-8                                            --
+│    │    └─_RandomPermutation: 3-11                                   --
+│    │    └─_LULinear: 3-12                                            6
+===============================================================================================
+Total params: 297,168
+Trainable params: 297,168
+Non-trainable params: 0
+===============================================================================================
+===============================================================================================
+Layer (type:depth-idx)                                                 Param #
+===============================================================================================
+ConditionalNormalizingFlow                                             --
+├─DiagGaussian: 1-1                                                    --
+├─ModuleList: 1-2                                                      --
+│    └─AutoregressiveRationalQuadraticSpline: 2-1                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-1        74,286
+│    └─LULinearPermute: 2-2                                            --
+│    │    └─_RandomPermutation: 3-2                                    --
+│    │    └─_LULinear: 3-3                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-3                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-4        74,286
+│    └─LULinearPermute: 2-4                                            --
+│    │    └─_RandomPermutation: 3-5                                    --
+│    │    └─_LULinear: 3-6                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-5                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-7        74,286
+│    └─LULinearPermute: 2-6                                            --
+│    │    └─_RandomPermutation: 3-8                                    --
+│    │    └─_LULinear: 3-9                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-7                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-10       74,286
+│    └─LULinearPermute: 2-8                                            --
+│    │    └─_RandomPermutation: 3-11                                   --
+│    │    └─_LULinear: 3-12                                            6
+===============================================================================================
+Total params: 297,168
+Trainable params: 297,168
+Non-trainable params: 0
+===============================================================================================
+===============================================================================================
+Layer (type:depth-idx)                                                 Param #
+===============================================================================================
+ConditionalNormalizingFlow                                             --
+├─DiagGaussian: 1-1                                                    --
+├─ModuleList: 1-2                                                      --
+│    └─AutoregressiveRationalQuadraticSpline: 2-1                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-1        74,286
+│    └─LULinearPermute: 2-2                                            --
+│    │    └─_RandomPermutation: 3-2                                    --
+│    │    └─_LULinear: 3-3                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-3                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-4        74,286
+│    └─LULinearPermute: 2-4                                            --
+│    │    └─_RandomPermutation: 3-5                                    --
+│    │    └─_LULinear: 3-6                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-5                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-7        74,286
+│    └─LULinearPermute: 2-6                                            --
+│    │    └─_RandomPermutation: 3-8                                    --
+│    │    └─_LULinear: 3-9                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-7                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-10       74,286
+│    └─LULinearPermute: 2-8                                            --
+│    │    └─_RandomPermutation: 3-11                                   --
+│    │    └─_LULinear: 3-12                                            6
+===============================================================================================
+Total params: 297,168
+Trainable params: 297,168
+Non-trainable params: 0
+===============================================================================================
+===============================================================================================
+Layer (type:depth-idx)                                                 Param #
+===============================================================================================
+ConditionalNormalizingFlow                                             --
+├─DiagGaussian: 1-1                                                    --
+├─ModuleList: 1-2                                                      --
+│    └─AutoregressiveRationalQuadraticSpline: 2-1                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-1        74,286
+│    └─LULinearPermute: 2-2                                            --
+│    │    └─_RandomPermutation: 3-2                                    --
+│    │    └─_LULinear: 3-3                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-3                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-4        74,286
+│    └─LULinearPermute: 2-4                                            --
+│    │    └─_RandomPermutation: 3-5                                    --
+│    │    └─_LULinear: 3-6                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-5                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-7        74,286
+│    └─LULinearPermute: 2-6                                            --
+│    │    └─_RandomPermutation: 3-8                                    --
+│    │    └─_LULinear: 3-9                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-7                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-10       74,286
+│    └─LULinearPermute: 2-8                                            --
+│    │    └─_RandomPermutation: 3-11                                   --
+│    │    └─_LULinear: 3-12                                            6
+===============================================================================================
+Total params: 297,168
+Trainable params: 297,168
+Non-trainable params: 0
+===============================================================================================
+===============================================================================================
+Layer (type:depth-idx)                                                 Param #
+===============================================================================================
+ConditionalNormalizingFlow                                             --
+├─DiagGaussian: 1-1                                                    --
+├─ModuleList: 1-2                                                      --
+│    └─AutoregressiveRationalQuadraticSpline: 2-1                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-1        74,286
+│    └─LULinearPermute: 2-2                                            --
+│    │    └─_RandomPermutation: 3-2                                    --
+│    │    └─_LULinear: 3-3                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-3                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-4        74,286
+│    └─LULinearPermute: 2-4                                            --
+│    │    └─_RandomPermutation: 3-5                                    --
+│    │    └─_LULinear: 3-6                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-5                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-7        74,286
+│    └─LULinearPermute: 2-6                                            --
+│    │    └─_RandomPermutation: 3-8                                    --
+│    │    └─_LULinear: 3-9                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-7                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-10       74,286
+│    └─LULinearPermute: 2-8                                            --
+│    │    └─_RandomPermutation: 3-11                                   --
+│    │    └─_LULinear: 3-12                                            6
+===============================================================================================
+Total params: 297,168
+Trainable params: 297,168
+Non-trainable params: 0
+===============================================================================================
+===============================================================================================
+Layer (type:depth-idx)                                                 Param #
+===============================================================================================
+ConditionalNormalizingFlow                                             --
+├─DiagGaussian: 1-1                                                    --
+├─ModuleList: 1-2                                                      --
+│    └─AutoregressiveRationalQuadraticSpline: 2-1                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-1        74,286
+│    └─LULinearPermute: 2-2                                            --
+│    │    └─_RandomPermutation: 3-2                                    --
+│    │    └─_LULinear: 3-3                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-3                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-4        74,286
+│    └─LULinearPermute: 2-4                                            --
+│    │    └─_RandomPermutation: 3-5                                    --
+│    │    └─_LULinear: 3-6                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-5                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-7        74,286
+│    └─LULinearPermute: 2-6                                            --
+│    │    └─_RandomPermutation: 3-8                                    --
+│    │    └─_LULinear: 3-9                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-7                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-10       74,286
+│    └─LULinearPermute: 2-8                                            --
+│    │    └─_RandomPermutation: 3-11                                   --
+│    │    └─_LULinear: 3-12                                            6
+===============================================================================================
+Total params: 297,168
+Trainable params: 297,168
+Non-trainable params: 0
+===============================================================================================
+===============================================================================================
+Layer (type:depth-idx)                                                 Param #
+===============================================================================================
+ConditionalNormalizingFlow                                             --
+├─DiagGaussian: 1-1                                                    --
+├─ModuleList: 1-2                                                      --
+│    └─AutoregressiveRationalQuadraticSpline: 2-1                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-1        74,286
+│    └─LULinearPermute: 2-2                                            --
+│    │    └─_RandomPermutation: 3-2                                    --
+│    │    └─_LULinear: 3-3                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-3                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-4        74,286
+│    └─LULinearPermute: 2-4                                            --
+│    │    └─_RandomPermutation: 3-5                                    --
+│    │    └─_LULinear: 3-6                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-5                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-7        74,286
+│    └─LULinearPermute: 2-6                                            --
+│    │    └─_RandomPermutation: 3-8                                    --
+│    │    └─_LULinear: 3-9                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-7                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-10       74,286
+│    └─LULinearPermute: 2-8                                            --
+│    │    └─_RandomPermutation: 3-11                                   --
+│    │    └─_LULinear: 3-12                                            6
+===============================================================================================
+Total params: 297,168
+Trainable params: 297,168
+Non-trainable params: 0
+===============================================================================================
+===============================================================================================
+Layer (type:depth-idx)                                                 Param #
+===============================================================================================
+ConditionalNormalizingFlow                                             --
+├─DiagGaussian: 1-1                                                    --
+├─ModuleList: 1-2                                                      --
+│    └─AutoregressiveRationalQuadraticSpline: 2-1                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-1        74,286
+│    └─LULinearPermute: 2-2                                            --
+│    │    └─_RandomPermutation: 3-2                                    --
+│    │    └─_LULinear: 3-3                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-3                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-4        74,286
+│    └─LULinearPermute: 2-4                                            --
+│    │    └─_RandomPermutation: 3-5                                    --
+│    │    └─_LULinear: 3-6                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-5                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-7        74,286
+│    └─LULinearPermute: 2-6                                            --
+│    │    └─_RandomPermutation: 3-8                                    --
+│    │    └─_LULinear: 3-9                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-7                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-10       74,286
+│    └─LULinearPermute: 2-8                                            --
+│    │    └─_RandomPermutation: 3-11                                   --
+│    │    └─_LULinear: 3-12                                            6
+===============================================================================================
+Total params: 297,168
+Trainable params: 297,168
+Non-trainable params: 0
+===============================================================================================
+===============================================================================================
+Layer (type:depth-idx)                                                 Param #
+===============================================================================================
+ConditionalNormalizingFlow                                             --
+├─DiagGaussian: 1-1                                                    --
+├─ModuleList: 1-2                                                      --
+│    └─AutoregressiveRationalQuadraticSpline: 2-1                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-1        74,286
+│    └─LULinearPermute: 2-2                                            --
+│    │    └─_RandomPermutation: 3-2                                    --
+│    │    └─_LULinear: 3-3                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-3                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-4        74,286
+│    └─LULinearPermute: 2-4                                            --
+│    │    └─_RandomPermutation: 3-5                                    --
+│    │    └─_LULinear: 3-6                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-5                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-7        74,286
+│    └─LULinearPermute: 2-6                                            --
+│    │    └─_RandomPermutation: 3-8                                    --
+│    │    └─_LULinear: 3-9                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-7                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-10       74,286
+│    └─LULinearPermute: 2-8                                            --
+│    │    └─_RandomPermutation: 3-11                                   --
+│    │    └─_LULinear: 3-12                                            6
+===============================================================================================
+Total params: 297,168
+Trainable params: 297,168
+Non-trainable params: 0
+===============================================================================================
+===============================================================================================
+Layer (type:depth-idx)                                                 Param #
+===============================================================================================
+ConditionalNormalizingFlow                                             --
+├─DiagGaussian: 1-1                                                    --
+├─ModuleList: 1-2                                                      --
+│    └─AutoregressiveRationalQuadraticSpline: 2-1                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-1        74,286
+│    └─LULinearPermute: 2-2                                            --
+│    │    └─_RandomPermutation: 3-2                                    --
+│    │    └─_LULinear: 3-3                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-3                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-4        74,286
+│    └─LULinearPermute: 2-4                                            --
+│    │    └─_RandomPermutation: 3-5                                    --
+│    │    └─_LULinear: 3-6                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-5                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-7        74,286
+│    └─LULinearPermute: 2-6                                            --
+│    │    └─_RandomPermutation: 3-8                                    --
+│    │    └─_LULinear: 3-9                                             6
+│    └─AutoregressiveRationalQuadraticSpline: 2-7                      --
+│    │    └─MaskedPiecewiseRationalQuadraticAutoregressive: 3-10       74,286
+│    └─LULinearPermute: 2-8                                            --
+│    │    └─_RandomPermutation: 3-11                                   --
+│    │    └─_LULinear: 3-12                                            6
+===============================================================================================
+Total params: 297,168
+Trainable params: 297,168
+Non-trainable params: 0
+===============================================================================================

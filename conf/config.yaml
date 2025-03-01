@@ -1,28 +1,25 @@
-TOTAL_TIMESTEPS: 100000
-PARAM: 0.00001
+TOTAL_TIMESTEPS: 1000000
 ALGO: "OURS"
 DEVICE: "cuda:2"
-ENV_NAME: "InvertedPendulum-v5"
+ENV_NAME: "Swimmer-v5"
 seed: 1
 
-# EXP_NAME: "thesis/test_0_entropy"
-# EXP_NAME: 'test-discriminantneg_1e-'
-
-policy_kwargs:
-  use_sde: True
+hyperparams:
+  ent_coef: 0.00001
+  gamma: 0.9
 
 ours_policy_kwargs:
   use_sde: False
   pi_be_ratio: 0.2
   pi_b_nf: True
-ablation_mode: False
-
-sb3_hyperparams: False
+  num_flows: 4
+  ablation_mode: False
 
 check_anomaly: False # checks if any non-finite values appear in torch backward()
 
-
-EXP_NAME: "ecml/${ENV_NAME}-${ALGO}-${PARAM}-pibe-${ours_policy_kwargs.pi_be_ratio}_sb3hyperparams_nf"
+# to allow appending to exp_name
+_EXP_NAME: "ecml/${now:%Y%m%d_%H%M}_${ENV_NAME}-${ALGO}"
+EXP_NAME: "${EXP_NAME}"
 
 hydra:
   run:
