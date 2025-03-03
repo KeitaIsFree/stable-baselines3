@@ -112,7 +112,7 @@ class NFActor(BasePolicy):
         nfs = []
         for i in range(self.nf_num_flows):
             nfs += [normflows.flows.AutoregressiveRationalQuadraticSpline(action_dim, hidden_layers, hidden_units, 
-                                                      num_context_channels=self.state_embedding_dim)]
+                                                      num_context_channels=obs_dim)]
             nfs += [normflows.flows.LULinearPermute(action_dim)]
         # for i in range(self.nf_num_flows):
         #     nfs += [normflows.flows.Planar((2,))]
@@ -126,14 +126,14 @@ class NFActor(BasePolicy):
         #     exit()
         summary(model)
 
-        s_em = []
-        s_em.append(nn.Linear(observation_space.shape[0], self.state_embedding_layer_sizes[0]))
-        s_em.append(nn.ReLU())
-        for layer_i in range(len(self.state_embedding_layer_sizes) - 1):
-            s_em.append(nn.Linear(self.state_embedding_layer_sizes[layer_i - 1], self.state_embedding_layer_sizes[layer_i]))
-            s_em.append(nn.ReLU())
-        s_em.append(nn.Linear(self.state_embedding_layer_sizes[-1], self.state_embedding_dim))
-        self.state_embedding = nn.Sequential(*s_em)
+        # s_em = []
+        # s_em.append(nn.Linear(observation_space.shape[0], self.state_embedding_layer_sizes[0]))
+        # s_em.append(nn.ReLU())
+        # for layer_i in range(len(self.state_embedding_layer_sizes) - 1):
+        #     s_em.append(nn.Linear(self.state_embedding_layer_sizes[layer_i - 1], self.state_embedding_layer_sizes[layer_i]))
+        #     s_em.append(nn.ReLU())
+        # s_em.append(nn.Linear(self.state_embedding_layer_sizes[-1], self.state_embedding_dim))
+        # self.state_embedding = nn.Sequential(*s_em)
 
     # def generate_random_masks(self, z_dim, num_flows, state_dim):
         # assert num_flows > 1
@@ -189,9 +189,9 @@ class NFActor(BasePolicy):
         pass
 
     def forward(self, x: PyTorchObs, deterministic: bool = False) -> th.Tensor:
-        context = self.state_embedding(x.float())
+        # context = self.state_embedding(x.float())
         try:
-            x_t, log_dets = self.model.sample(len(x), context=context)
+            x_t, log_dets = self.model.sample(len(x), context=x.float())
         except Exception as e:
             # print('observation: ', x)
             # pass

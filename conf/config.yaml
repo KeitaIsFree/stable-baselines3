@@ -12,7 +12,7 @@ ours_policy_kwargs:
   use_sde: False
   pi_be_ratio: 0.2
   pi_b_nf: True
-  num_flows: 4
+  num_flows: 8
   ablation_mode: False
 
 check_anomaly: False # checks if any non-finite values appear in torch backward()

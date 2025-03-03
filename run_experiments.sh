@@ -1,6 +1,6 @@
 
 
-
+rm log1.txt log2.txt log3.txt
 
 SEEDS=(1 2 3 4 5 6 7 8 9 10)
 
